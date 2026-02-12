@@ -1,0 +1,61 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+
+
+# Read the CSV file
+df = pd.read_csv('/workspaces/AI-Data-Lab-Spring26-Group-18/rotation_schedule_data_2023-2024 _Deidentified_v2.csv')
+
+
+# List of schools to filter and normalize
+schools_to_category = {
+    'Georgia State University - Perimeter College': 'Georgia State University',
+    'Georgia State University - SON - Undergraduate': 'Georgia State University',
+    'Herzing University': 'Herzing University',
+    'Herzing University - Online BSN': 'Herzing University',
+    'Herzing University - Online': 'Herzing University',
+    'Grand Canyon University': 'Grand Canyon University',
+    'Gordon State College': 'Gordon State College',
+}
+
+# Normalize school names in the DataFrame
+def normalize_school(school):
+    if pd.isna(school):
+        return None
+    for key in schools_to_category:
+        if str(school).strip() == key:
+            return schools_to_category[key]
+    return None  # Exclude if not in the list
+
+df['School Category'] = df['Schools'].apply(normalize_school)
+filtered_school_df = df[df['School Category'].notnull()].copy()
+
+
+
+# Convert columns to numeric
+filtered_school_df['Total Hours per Person'] = pd.to_numeric(filtered_school_df['Total Hours per Person'], errors='coerce')
+filtered_school_df['Student Count'] = pd.to_numeric(filtered_school_df['Student Count'], errors='coerce')
+
+
+# Calculate average hours per student per normalized school category
+avg_hours_by_school = filtered_school_df.groupby('School Category').apply(
+    lambda x: (x['Total Hours per Person'] * x['Student Count']).sum() / x['Student Count'].sum()
+).sort_values(ascending=False)
+
+
+# Create histogram
+plt.figure(figsize=(12, 6))
+bars = plt.bar(range(len(avg_hours_by_school)), avg_hours_by_school.values, color='steelblue', edgecolor='black')
+plt.xlabel('School', fontsize=12, fontweight='bold')
+plt.ylabel('Average Hours per Student', fontsize=12, fontweight='bold')
+plt.title('Average Hours Contributed Per Student by School (Filtered & Normalized)', fontsize=14, fontweight='bold')
+plt.xticks(range(len(avg_hours_by_school)), avg_hours_by_school.index, rotation=45, ha='right')
+plt.grid(axis='y', alpha=0.3)
+plt.tight_layout()
+
+# Save the figure
+plt.savefig('/workspaces/AI-Data-Lab-Spring26-Group-18/Yolanda_hours_contributed_histogram.png', dpi=300, bbox_inches='tight')
+print("Histogram saved successfully!")
+print("\nAverage Hours per Student by School (Filtered & Normalized):")
+print(avg_hours_by_school)
+plt.show()

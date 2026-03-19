@@ -13,19 +13,15 @@ OUT_DEFAULT = Path("output/archived_status_by_school_percent.png")
 
 
 def make_stacked_bar(agg: pd.DataFrame, top_n: Optional[int] = None, outpath: Path = OUT_DEFAULT):
-    """Create a stacked bar chart where y-axis is percentage per school.
 
-    - `agg` must have columns: `Schools`, `StatusClean`, `Student Count` (numeric)
-    - If `top_n` is provided, plot only the top N schools by total students.
-    """
-    # ----- determine schools to include -----
+    # determine schools to include 
     totals = agg.groupby("Schools")["Student Count"].sum().sort_values(ascending=False)
     if top_n is not None:
         top_schools = totals.head(top_n).index.tolist()
     else:
         top_schools = totals.index.tolist()
 
-    # ----- pivot to wide format (counts) -----
+    #pivot to wide format (counts)
     pivot = (
         agg[agg["Schools"].isin(top_schools)]
         .pivot_table(index="Schools", columns="StatusClean", values="Student Count", fill_value=0)
@@ -34,7 +30,7 @@ def make_stacked_bar(agg: pd.DataFrame, top_n: Optional[int] = None, outpath: Pa
     # keep school order consistent
     pivot = pivot.loc[top_schools]
 
-    # ----- convert counts to percentages per school -----
+    # convert counts to percentages per school
     row_sums = pivot.sum(axis=1).replace(0, 1)  # avoid division by zero
     pivot_perc = pivot.div(row_sums, axis=0) * 100
 
@@ -44,7 +40,7 @@ def make_stacked_bar(agg: pd.DataFrame, top_n: Optional[int] = None, outpath: Pa
     extras = [s for s in pivot_perc.columns if s not in status_order]
     pivot_perc = pivot_perc[existing + extras]
 
-    # ----- plotting -----
+    # plotting 
     sns.set(style="whitegrid")
     # set figure size (height reverted to 10 inches)
     fig_width = max(10, len(pivot_perc) * 0.4)
@@ -99,7 +95,6 @@ def make_stacked_bar(agg: pd.DataFrame, top_n: Optional[int] = None, outpath: Pa
 
 
 def prepare_aggregation(df: pd.DataFrame) -> pd.DataFrame:
-    """Filter archived rows, extract status in parentheses, and aggregate counts by school and status."""
     # Normalize column names
     df = df.copy()
     if "Status" not in df.columns:
@@ -127,7 +122,6 @@ def prepare_aggregation(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def read_csv_autodetect(path: Path) -> pd.DataFrame:
-    """Read CSV with flexible filename matching in the `data/` folder."""
     path = Path(path)
     if path.exists():
         return pd.read_csv(path)

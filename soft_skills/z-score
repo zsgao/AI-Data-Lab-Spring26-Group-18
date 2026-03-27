@@ -70,5 +70,3 @@ df = df.rename(columns={
 
 # Save
 df.to_csv('soft_skills_school_scores.csv', index=False)
-
-print("✅ File saved with rows:", len(df))

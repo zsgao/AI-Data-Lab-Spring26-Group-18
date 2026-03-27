@@ -1,0 +1,38 @@
+import pandas as pd
+
+# Load the cleaned rotation data
+rot = pd.read_csv('~/Desktop/AI data lab/df_accurate_sample_all_status.csv')
+
+# Load Vizient data
+viz = pd.read_csv('~/Desktop/AI data lab/Vizient_CLEANED_FINAL.csv')
+
+# Strip whitespace from column names
+rot.columns = rot.columns.str.strip()
+viz.columns = viz.columns.str.strip()
+
+# Create a mapping from Rotation school names -> Vizient standardized names
+school_mapping = {
+    'chamberlain college of nursing - georgia': None,  # no match in Vizient
+    'chamberlain college of nursing - atlanta': None,  # no match in Vizient
+    'Georgia Baptist College of Nursing of Mercer University - Undergraduate Nursing': 'Mercer University',
+    'Georgia Baptist College of Nursing of Mercer University - Undergraduate Nursing - Atlanta': 'Mercer University',
+    'Kennesaw State University - Nursing': 'Kennesaw State University',
+    'Emory University - SON Pre-licensure': 'Emory University',
+    'Georgia State University - Perimeter College': 'Georgia State University',
+    'Georgia State University - SON - Undergraduate': 'Georgia State University',
+    'University of North Georgia - Nursing': 'University Of North Georgia',
+    'Georgia Gwinnett College': 'Georgia Gwinnett College',
+    'South College - Atlanta Campus - Nursing': 'South College Atlanta'
+}
+
+# Apply the mapping
+rot['School_Cleaned'] = rot['Schools'].map(school_mapping)
+
+# Optional: if you want to keep original names where no match exists
+rot['School_Cleaned'] = rot['School_Cleaned'].fillna(rot['Schools'])
+
+# Check the result
+print(rot[['Schools', 'School_Cleaned']].head(20))
+
+# Save cleaned Rotation data
+rot.to_csv('~/Desktop/AI data lab/df_accurate_sample_cleanedNames.csv', index=False)

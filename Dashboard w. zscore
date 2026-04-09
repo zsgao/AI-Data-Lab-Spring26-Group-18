@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nursing School Collaborator Dashboard v2</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@300;400;500&display=swap');
+:root {
+  --bg:#07090f;--surface:#0e1422;--surface2:#141d2e;--border:#1a2540;
+  --blue:#4f8ef7;--cyan:#22d3ee;--green:#22c55e;--gold:#f59e0b;
+  --red:#f87171;--purple:#a78bfa;--pink:#f472b6;
+  --text:#dde4f0;--muted:#4a5c7a;--soft:#8899b8;
+  --serif:'Syne',sans-serif;--mono:'IBM Plex Mono',monospace;--body:'Inter',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse 80% 50% at 20% 0%,rgba(79,142,247,0.06),transparent),
+             radial-gradient(ellipse 60% 40% at 80% 100%,rgba(34,211,238,0.04),transparent);
+  pointer-events:none;z-index:0;}
+.wrap{max-width:1440px;margin:0 auto;padding:0 28px;position:relative;z-index:1;}
+
+/* HEADER */
+header{padding:32px 0 24px;border-bottom:1px solid var(--border);margin-bottom:32px;}
+.hrow{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+h1{font-family:var(--serif);font-size:2rem;font-weight:700;color:#fff;letter-spacing:-0.5px;line-height:1.1;}
+h1 em{color:var(--cyan);font-style:normal;}
+.htag{font-size:0.7rem;color:var(--muted);font-family:var(--mono);letter-spacing:2px;margin-top:6px;}
+.pill{background:rgba(79,142,247,0.1);border:1px solid rgba(79,142,247,0.25);color:var(--blue);
+  font-family:var(--mono);font-size:0.65rem;padding:5px 12px;border-radius:3px;letter-spacing:1.5px;}
+
+/* TABS */
+.tabs{display:flex;gap:4px;margin-bottom:28px;background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:4px;width:fit-content;}
+.tab{padding:8px 20px;border-radius:7px;font-size:0.82rem;font-weight:500;cursor:pointer;
+  color:var(--soft);border:none;background:transparent;font-family:var(--body);transition:all 0.2s;}
+.tab.active{background:var(--surface2);color:#fff;border:1px solid var(--border);}
+
+/* PANELS */
+.panel{display:none;}.panel.active{display:block;}
+
+/* CONTROLS */
+.controls{background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:18px 22px;margin-bottom:24px;display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end;}
+.cg{display:flex;flex-direction:column;gap:5px;}
+.cg label{font-size:0.65rem;color:var(--muted);font-family:var(--mono);letter-spacing:1.5px;text-transform:uppercase;}
+.cg select,.cg input[type=range]{background:var(--surface2);border:1px solid var(--border);color:var(--text);
+  border-radius:6px;padding:7px 11px;font-family:var(--body);font-size:0.82rem;outline:none;cursor:pointer;min-width:170px;transition:border-color 0.2s;}
+.cg select:hover{border-color:var(--blue);}
+.cg input[type=range]{padding:3px 0;accent-color:var(--blue);min-width:140px;}
+.rv{font-family:var(--mono);font-size:0.72rem;color:var(--blue);margin-top:2px;}
+.rbtn{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;
+  padding:7px 14px;font-family:var(--body);font-size:0.78rem;cursor:pointer;transition:all 0.2s;align-self:flex-end;}
+.rbtn:hover{border-color:var(--blue);color:var(--blue);}
+
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+@media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr);}}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 20px;position:relative;overflow:hidden;}
+.kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.kpi.b::after{background:linear-gradient(90deg,var(--blue),transparent);}
+.kpi.c::after{background:linear-gradient(90deg,var(--cyan),transparent);}
+.kpi.g::after{background:linear-gradient(90deg,var(--green),transparent);}
+.kpi.o::after{background:linear-gradient(90deg,var(--gold),transparent);}
+.kpi-l{font-size:0.63rem;color:var(--muted);font-family:var(--mono);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;}
+.kpi-v{font-family:var(--serif);font-size:1.9rem;font-weight:700;line-height:1;}
+.kpi-v.b{color:var(--blue);}.kpi-v.c{color:var(--cyan);}.kpi-v.g{color:var(--green);}.kpi-v.o{color:var(--gold);}
+.kpi-s{font-size:0.72rem;color:var(--muted);margin-top:5px;}
+
+/* GRID */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:18px;}
+@media(max-width:1000px){.grid2,.grid3{grid-template-columns:1fr;}}
+.full{grid-column:1/-1;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:22px;}
+.ct{font-family:var(--serif);font-size:1.05rem;font-weight:600;color:#fff;margin-bottom:3px;}
+.cs{font-size:0.72rem;color:var(--muted);margin-bottom:18px;}
+.ch{position:relative;}
+
+/* BEST CARDS */
+.best3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px;}
+@media(max-width:800px){.best3{grid-template-columns:1fr;}}
+.bcard{background:var(--surface);border:1px solid rgba(34,197,94,0.25);border-radius:10px;padding:20px;position:relative;overflow:hidden;}
+.bcard::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top left,rgba(34,197,94,0.06),transparent 60%);pointer-events:none;}
+.brank{font-family:var(--serif);font-size:3rem;font-weight:700;color:rgba(34,197,94,0.12);position:absolute;top:10px;right:14px;line-height:1;}
+.bschool{font-family:var(--serif);font-size:1rem;font-weight:600;color:#fff;margin-bottom:14px;line-height:1.25;text-transform:capitalize;padding-right:40px;}
+.bm{display:flex;flex-direction:column;gap:7px;}
+.bmr{display:flex;justify-content:space-between;align-items:center;}
+.bml{font-size:0.63rem;font-family:var(--mono);color:var(--muted);letter-spacing:1px;}
+.bmv{font-size:0.78rem;font-family:var(--mono);font-weight:500;}
+.note-box{background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:14px 18px;margin-bottom:24px;font-size:0.78rem;color:#c4974a;line-height:1.6;}
+.note-box strong{color:var(--gold);}
+
+/* RADAR container */
+.radar-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px;}
+@media(max-width:900px){.radar-row{grid-template-columns:1fr;}}
+.rcard{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;}
+.rcard.highlight{border-color:rgba(34,211,238,0.4);}
+.rschool{font-family:var(--serif);font-size:0.9rem;color:#fff;margin-bottom:12px;text-transform:capitalize;}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead tr{border-bottom:1px solid var(--border);}
+th{text-align:left;font-size:0.63rem;font-family:var(--mono);color:var(--muted);letter-spacing:1.5px;
+  text-transform:uppercase;padding:0 12px 11px;white-space:nowrap;cursor:pointer;user-select:none;}
+th:hover{color:var(--blue);}
+td{padding:11px 12px;font-size:0.8rem;border-bottom:1px solid rgba(26,37,64,0.5);vertical-align:middle;}
+tbody tr{transition:background 0.15s;}
+tbody tr:hover{background:var(--surface2);}
+.sch{font-weight:500;color:#fff;text-transform:capitalize;}
+.mono{font-family:var(--mono);font-size:0.78rem;}
+.bar-cell{display:flex;align-items:center;gap:8px;}
+.bar{height:4px;border-radius:2px;background:var(--border);min-width:50px;flex:1;}
+.bfill{height:100%;border-radius:2px;}
+.tag{display:inline-block;font-size:0.6rem;font-family:var(--mono);padding:3px 8px;border-radius:3px;letter-spacing:0.5px;white-space:nowrap;}
+.t-top{background:rgba(34,197,94,0.12);color:var(--green);border:1px solid rgba(34,197,94,0.25);}
+.t-mid{background:rgba(245,158,11,0.12);color:var(--gold);border:1px solid rgba(245,158,11,0.25);}
+.t-low{background:rgba(248,113,113,0.12);color:var(--red);border:1px solid rgba(248,113,113,0.25);}
+.t-na{background:rgba(74,92,122,0.15);color:var(--muted);border:1px solid rgba(74,92,122,0.2);}
+.zscore{font-family:var(--mono);font-size:0.78rem;}
+.zpos{color:var(--green);}.zneg{color:var(--red);}.znat{color:var(--muted);}
+
+/* Z-SCORE HEATMAP */
+.heatmap{width:100%;border-collapse:collapse;font-size:0.75rem;}
+.heatmap th{font-size:0.6rem;font-family:var(--mono);color:var(--muted);padding:6px 8px;text-align:center;letter-spacing:1px;}
+.heatmap td{padding:7px 10px;text-align:center;font-family:var(--mono);border:1px solid rgba(26,37,64,0.4);}
+.heatmap .row-label{text-align:left;color:var(--soft);font-size:0.72rem;white-space:nowrap;text-transform:capitalize;min-width:160px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="hrow">
+    <div>
+      <h1>Nursing School <em>Collaborator</em> Analysis</h1>
+      <div class="htag">EMORY HEALTHCARE · BSN PROGRAM EVALUATION · 2022–2025</div>
+    </div>
+    <div class="pill">COMPOSITE Z-SCORE DASHBOARD</div>
+  </div>
+</header>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('overview')">Overview</button>
+  <button class="tab" onclick="switchTab('zscores')">Z-Score Analysis</button>
+  <button class="tab" onclick="switchTab('radar')">School Profiles</button>
+  <button class="tab" onclick="switchTab('detail')">All Schools</button>
+</div>
+
+<!-- ══════════════════════════ TAB 1: OVERVIEW ══════════════════════════ -->
+<div class="panel active" id="tab-overview">
+
+  <div class="note-box">
+    <strong>⚠ Data coverage note:</strong> Hard skills (GPA + NCLEX pass rate) available for <strong>20 school-program combinations</strong>. 
+    Soft skills (completion %, clinical hours, retention rate) available for <strong>9 schools</strong> that matched rotation data. 
+    Full composite Z-score available for <strong>8 schools only</strong>. Schools without composite scores are still shown using available metrics.
+  </div>
+
+  <div class="kpis">
+    <div class="kpi b"><div class="kpi-l">Schools with Full Data</div><div class="kpi-v b">8</div><div class="kpi-s">Hard + soft + composite</div></div>
+    <div class="kpi c"><div class="kpi-l">Avg NCLEX Pass Rate</div><div class="kpi-v c" id="kAvgPass">—</div><div class="kpi-s">Across all programs</div></div>
+    <div class="kpi g"><div class="kpi-l">Avg Retention Rate</div><div class="kpi-v g" id="kAvgRet">—</div><div class="kpi-s">Among 9 schools w/ soft data</div></div>
+    <div class="kpi o"><div class="kpi-l">Top Composite Score</div><div class="kpi-v o" id="kTopComp">—</div><div class="kpi-s">Best overall collaborator</div></div>
+  </div>
+
+  <div style="font-family:var(--serif);font-size:1rem;color:#fff;margin-bottom:4px;">⭐ Top Collaborators — Full Composite Score</div>
+  <div style="font-size:0.72rem;color:var(--muted);margin-bottom:14px;">Ranked by Composite Z-Score (Hard Skills + Soft Skills combined). Only schools with complete data shown.</div>
+  <div class="best3" id="best3"></div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="ct">Composite Z-Score Ranking</div>
+      <div class="cs">Higher = better overall collaborator · Schools with complete data only</div>
+      <div class="ch" style="height:280px"><canvas id="compBar"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ct">Hard vs Soft Skills Score</div>
+      <div class="cs">Comparing academic performance vs clinical/operational metrics</div>
+      <div class="ch" style="height:280px"><canvas id="hardSoftBar"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ct">NCLEX Pass Rate vs Retention Rate</div>
+      <div class="cs">Bubble size = nurses hired · Green zone = ideal collaborators</div>
+      <div class="ch" style="height:280px"><canvas id="scatter"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ct">GPA vs NCLEX Pass Rate</div>
+      <div class="cs">Does higher GPA correlate with better pass rates?</div>
+      <div class="ch" style="height:280px"><canvas id="gpaPass"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ TAB 2: Z-SCORES ══════════════════════════ -->
+<div class="panel" id="tab-zscores">
+  <div class="card" style="margin-bottom:18px;">
+    <div class="ct">Z-Score Heatmap — All Metrics</div>
+    <div class="cs">Green = above average · Red = below average · Each cell shows the z-score value · Schools sorted by composite score</div>
+    <div class="tbl-wrap" id="heatmapWrap"></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="ct">GPA Z-Score Distribution</div>
+      <div class="cs">How each school compares to the group average GPA</div>
+      <div class="ch" style="height:280px"><canvas id="zGPA"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ct">NCLEX Pass Rate Z-Score</div>
+      <div class="cs">Relative performance on licensure exam</div>
+      <div class="ch" style="height:280px"><canvas id="zPass"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ct">Retention Rate Z-Score</div>
+      <div class="cs">Among 9 schools with rotation & Vizient data</div>
+      <div class="ch" style="height:280px"><canvas id="zRet"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ct">Completion % Z-Score</div>
+      <div class="cs">Rotation request completion rate relative to peers</div>
+      <div class="ch" style="height:280px"><canvas id="zComp"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ TAB 3: RADAR ══════════════════════════ -->
+<div class="panel" id="tab-radar">
+  <div class="note-box" style="margin-bottom:18px;">
+    Radar charts show each school's Z-scores across all available dimensions. <strong>Larger area = stronger overall profile.</strong>
+    Schools with missing soft skill data show only hard skill axes.
+  </div>
+  <div class="radar-row" id="radarGrid"></div>
+</div>
+
+<!-- ══════════════════════════ TAB 4: ALL SCHOOLS ══════════════════════════ -->
+<div class="panel" id="tab-detail">
+  <div class="controls">
+    <div class="cg">
+      <label>Program Type</label>
+      <select id="typeFilter" onchange="renderTable()">
+        <option value="all">All Types</option>
+        <option value="bachelors">Bachelors</option>
+        <option value="associates">Associates</option>
+        <option value="masters">Pre-Licensure Masters</option>
+      </select>
+    </div>
+    <div class="cg">
+      <label>Min NCLEX Pass Rate</label>
+      <input type="range" id="passFilter" min="70" max="100" value="70" oninput="document.getElementById('passVal').textContent=this.value;renderTable()">
+      <div class="rv">≥ <span id="passVal">70</span>%</div>
+    </div>
+    <div class="cg">
+      <label>Sort By</label>
+      <select id="sortBy" onchange="renderTable()">
+        <option value="composite">Composite Z-Score</option>
+        <option value="hard">Hard Skills Score</option>
+        <option value="soft">Soft Skills Score</option>
+        <option value="pass">NCLEX Pass Rate</option>
+        <option value="gpa">Average GPA</option>
+      </select>
+    </div>
+    <button class="rbtn" onclick="document.getElementById('typeFilter').value='all';document.getElementById('passFilter').value=70;document.getElementById('passVal').textContent=70;document.getElementById('sortBy').value='composite';renderTable()">↺ Reset</button>
+  </div>
+  <div class="card">
+    <div class="ct">All Schools — Complete Data View</div>
+    <div class="cs">Click column headers to sort · Z-scores show relative performance vs group average</div>
+    <div class="tbl-wrap"><table><thead id="tHead"></thead><tbody id="tBody"></tbody></table></div>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════════
+const composite = [
+  {s:"albany state university - bachelors",gpa:3.25,pass:89.58,gpaZ:-0.983,passZ:-0.037,hardF:-0.605,comp:null,ret:null,compPct:null,hours:null,retZ:null,compZ:null,softF:null},
+  {s:"albany state university - associates",gpa:3.25,pass:83.82,gpaZ:-0.983,passZ:-1.057,hardF:-1.013,comp:null,ret:null,compPct:null,hours:null,retZ:null,compZ:null,softF:null},
+  {s:"atlanta technical college",gpa:3.02,pass:96.61,gpaZ:-2.272,passZ:1.208,hardF:-0.880,comp:null,ret:null,compPct:null,hours:null,retZ:null,compZ:null,softF:null},
+  {s:"brenau university - pre-licensure masters",gpa:3.43,pass:94.55,gpaZ:0.065,passZ:0.844,hardF:0.376,comp:0.093,ret:0.707,compPct:9.3,hours:118.6,retZ:-0.231,compZ:-0.988,softF:0.344,composite:0.360},
+  {s:"brenau university - bachelors",gpa:3.43,pass:88.41,gpaZ:0.065,passZ:-0.244,hardF:-0.059,comp:0.093,ret:0.707,compPct:9.3,hours:118.6,retZ:-0.231,compZ:-0.988,softF:0.344,composite:0.143},
+  {s:"columbus state university",gpa:3.32,pass:94.55,gpaZ:-0.605,passZ:0.844,hardF:-0.026,comp:null,ret:null,compPct:null,hours:null,retZ:null,compZ:null,softF:null},
+  {s:"emory university - bachelors",gpa:3.62,pass:90.48,gpaZ:1.138,passZ:0.123,hardF:0.732,comp:0.926,ret:0.729,compPct:92.6,hours:60.0,retZ:-0.032,compZ:1.255,softF:0.356,composite:0.544},
+  {s:"emory university - pre-licensure masters",gpa:3.62,pass:85.76,gpaZ:1.138,passZ:-0.713,hardF:0.397,comp:0.926,ret:0.729,compPct:92.6,hours:60.0,retZ:-0.032,compZ:1.255,softF:0.356,composite:0.377},
+  {s:"georgia college and state university",gpa:3.33,pass:92.47,gpaZ:-0.511,passZ:0.475,hardF:-0.116,comp:null,ret:null,compPct:null,hours:null,retZ:null,compZ:null,softF:null},
+  {s:"georgia gwinnett college",gpa:3.51,pass:93.36,gpaZ:0.473,passZ:0.633,hardF:0.537,comp:0.297,ret:0.730,compPct:29.7,hours:47.4,retZ:-0.029,compZ:-0.438,softF:-0.380,composite:0.078},
+  {s:"georgia highlands college",gpa:3.25,pass:92.11,gpaZ:-0.983,passZ:0.411,hardF:-0.425,comp:null,ret:null,compPct:null,hours:null,retZ:null,compZ:null,softF:null},
+  {s:"georgia state university - associates",gpa:3.57,pass:97.75,gpaZ:0.837,passZ:1.410,hardF:1.066,comp:0.383,ret:0.716,compPct:38.3,hours:61.6,retZ:-0.151,compZ:-0.206,softF:-0.148,composite:0.459},
+  {s:"georgia state university - bachelors",gpa:3.57,pass:87.65,gpaZ:0.837,passZ:-0.378,hardF:0.351,comp:0.383,ret:0.716,compPct:38.3,hours:61.6,retZ:-0.151,compZ:-0.206,softF:-0.148,composite:0.101},
+  {s:"gordon state college - associates",gpa:3.25,pass:88.14,gpaZ:-0.983,passZ:-0.292,hardF:-0.707,comp:null,ret:null,compPct:null,hours:null,retZ:null,compZ:null,softF:null},
+  {s:"gordon state college - bachelors",gpa:3.25,pass:84.24,gpaZ:-0.983,passZ:-0.982,hardF:-0.983,comp:null,ret:null,compPct:null,hours:null,retZ:null,compZ:null,softF:null},
+  {s:"herzing university",gpa:3.38,pass:73.86,gpaZ:-0.241,passZ:-2.821,hardF:-1.273,comp:null,ret:null,compPct:null,hours:null,retZ:null,compZ:null,softF:null},
+  {s:"kennesaw state university",gpa:3.57,pass:91.28,gpaZ:0.842,passZ:0.264,hardF:0.611,comp:0.944,ret:0.725,compPct:94.4,hours:43.2,retZ:-0.067,compZ:1.304,softF:0.131,composite:0.371},
+  {s:"mercer university",gpa:null,pass:null,gpaZ:null,passZ:null,hardF:null,comp:0.786,ret:0.604,compPct:78.6,hours:68.1,retZ:-1.129,compZ:0.877,softF:-0.025,composite:null},
+  {s:"reinhardt university",gpa:3.65,pass:94.74,gpaZ:1.285,passZ:0.877,hardF:1.122,comp:null,ret:null,compPct:null,hours:null,retZ:null,compZ:null,softF:null},
+  {s:"south college atlanta",gpa:null,pass:null,gpaZ:null,passZ:null,hardF:null,comp:0.085,ret:1.0,compPct:8.5,hours:60.0,retZ:2.331,compZ:-1.009,softF:0.390,composite:null},
+  {s:"university of north georgia",gpa:3.59,pass:93.05,gpaZ:0.950,passZ:0.578,hardF:0.801,comp:0.625,ret:0.614,compPct:62.5,hours:78.75,retZ:-1.043,compZ:0.444,softF:0.006,composite:0.404},
+  {s:"university of west georgia",gpa:3.59,pass:83.33,gpaZ:0.916,passZ:-1.144,hardF:0.092,comp:0.0,ret:0.773,compPct:0.0,hours:36.0,retZ:0.351,compZ:-1.238,softF:-0.675,composite:-0.291},
+];
+
+const nursesBySchool = {
+  "emory university":375,"georgia state university":171,"kennesaw state university":162,
+  "mercer university":145,"university of west georgia":97,"university of north georgia":84,
+  "brenau university":61,"georgia gwinnett college":36,"herzing university":36,
+  "columbus state university":29,"albany state university":8,
+  "georgia college and state university":12,"reinhardt university":5,
+};
+
+function toTitle(s){return s.replace(/\b\w/g,c=>c.toUpperCase());}
+function pct(v,d=1){return v!=null?(v*100).toFixed(d)+'%':'N/A';}
+function fmt(v,d=2){return v!=null?v.toFixed(d):'—';}
+function zFmt(v){return v!=null?(v>=0?'+':'')+v.toFixed(3):'N/A';}
+
+const palette=['#4f8ef7','#22d3ee','#22c55e','#f59e0b','#a78bfa',
+               '#f472b6','#fb923c','#34d399','#60a5fa','#e879f9',
+               '#2dd4bf','#fbbf24','#818cf8'];
+function sc(name){
+  const base=name.split(' - ')[0];
+  const keys=Object.keys(nursesBySchool);
+  const i=keys.findIndex(k=>base.includes(k)||k.includes(base.split(' ')[0]));
+  return palette[Math.max(i,0)%palette.length];
+}
+
+function zColor(v,alpha=0.85){
+  if(v==null)return'rgba(74,92,122,0.3)';
+  if(v>=0.5)return`rgba(34,197,94,${alpha})`;
+  if(v>=0.1)return`rgba(34,211,238,${alpha})`;
+  if(v>=-0.1)return`rgba(148,163,184,${alpha})`;
+  if(v>=-0.5)return`rgba(251,191,36,${alpha})`;
+  return`rgba(248,113,113,${alpha})`;
+}
+function zBg(v){
+  if(v==null)return'rgba(74,92,122,0.08)';
+  const a=Math.min(Math.abs(v)/2,0.35);
+  if(v>0)return`rgba(34,197,94,${a})`;
+  return`rgba(248,113,113,${a})`;
+}
+
+let charts={};
+function dc(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+
+const chartDefaults={
+  responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{labels:{color:'#8899b8',boxWidth:10,font:{size:10}}},
+    tooltip:{backgroundColor:'#0e1422',borderColor:'#1a2540',borderWidth:1,
+      titleColor:'#fff',bodyColor:'#8899b8',padding:10}},
+  scales:{
+    x:{grid:{color:'#1a2540'},ticks:{color:'#4a5c7a'}},
+    y:{grid:{color:'#1a2540'},ticks:{color:'#4a5c7a'}}
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+function init(){
+  // KPIs
+  const withPass=composite.filter(d=>d.pass!=null);
+  const avgPass=(withPass.reduce((s,d)=>s+d.pass,0)/withPass.length).toFixed(1)+'%';
+  const withRet=composite.filter(d=>d.ret!=null);
+  const avgRet=(withRet.reduce((s,d)=>s+d.ret,0)/withRet.length*100).toFixed(1)+'%';
+  const withComp=composite.filter(d=>d.composite!=null).sort((a,b)=>b.composite-a.composite);
+  const topComp=withComp.length?'+'+withComp[0].composite.toFixed(3):'—';
+  document.getElementById('kAvgPass').textContent=avgPass;
+  document.getElementById('kAvgRet').textContent=avgRet;
+  document.getElementById('kTopComp').textContent=topComp;
+
+  // Best 3
+  const top3=withComp.slice(0,3);
+  document.getElementById('best3').innerHTML=top3.map((d,i)=>`
+    <div class="bcard">
+      <div class="brank">${i+1}</div>
+      <div class="bschool">${toTitle(d.s)}</div>
+      <div class="bm">
+        <div class="bmr"><span class="bml">COMPOSITE Z</span><span class="bmv" style="color:var(--green)">${zFmt(d.composite)}</span></div>
+        <div class="bmr"><span class="bml">HARD SKILLS</span><span class="bmv" style="color:var(--blue)">${zFmt(d.hardF)}</span></div>
+        <div class="bmr"><span class="bml">SOFT SKILLS</span><span class="bmv" style="color:var(--cyan)">${zFmt(d.softF)}</span></div>
+        <div class="bmr"><span class="bml">NCLEX PASS</span><span class="bmv" style="color:var(--gold)">${fmt(d.pass,1)}%</span></div>
+        <div class="bmr"><span class="bml">RETENTION</span><span class="bmv" style="color:var(--purple)">${pct(d.ret)}</span></div>
+      </div>
+    </div>`).join('');
+
+  renderOverviewCharts();
+  renderHeatmap();
+  renderZCharts();
+  renderRadars();
+  renderTable();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// OVERVIEW CHARTS
+// ═══════════════════════════════════════════════════════════════
+function renderOverviewCharts(){
+  // Composite bar
+  const withC=composite.filter(d=>d.composite!=null).sort((a,b)=>b.composite-a.composite);
+  dc('compBar');
+  charts['compBar']=new Chart(document.getElementById('compBar').getContext('2d'),{
+    type:'bar',
+    data:{
+      labels:withC.map(d=>toTitle(d.s.split(' - ')[0]).replace('University','Univ.')),
+      datasets:[{
+        label:'Composite Z-Score',
+        data:withC.map(d=>+d.composite.toFixed(3)),
+        backgroundColor:withC.map(d=>d.composite>=0?'rgba(34,197,94,0.7)':'rgba(248,113,113,0.7)'),
+        borderColor:withC.map(d=>d.composite>=0?'#22c55e':'#f87171'),
+        borderWidth:1,borderRadius:4,
+      }]
+    },
+    options:{...chartDefaults,
+      plugins:{...chartDefaults.plugins,legend:{display:false},
+        tooltip:{...chartDefaults.plugins.tooltip,callbacks:{label:ctx=>`Composite Z: ${ctx.raw}`}}},
+      scales:{
+        x:{grid:{color:'#1a2540'},ticks:{color:'#4a5c7a',font:{size:9}}},
+        y:{grid:{color:'#1a2540'},ticks:{color:'#4a5c7a'},
+           title:{display:true,text:'Composite Z-Score',color:'#4a5c7a',font:{size:10}}}
+      }
+    }
+  });
+
+  // Hard vs soft
+  const both=composite.filter(d=>d.hardF!=null&&d.softF!=null);
+  dc('hardSoftBar');
+  charts['hardSoftBar']=new Chart(document.getElementById('hardSoftBar').getContext('2d'),{
+    type:'bar',
+    data:{
+      labels:both.map(d=>toTitle(d.s.split(' - ')[0]).replace('University','Univ.')),
+      datasets:[
+        {label:'Hard Skills (GPA+NCLEX)',data:both.map(d=>+d.hardF.toFixed(3)),backgroundColor:'rgba(79,142,247,0.7)',borderColor:'#4f8ef7',borderWidth:1,borderRadius:2},
+        {label:'Soft Skills (Completion+Hours+Retention)',data:both.map(d=>+d.softF.toFixed(3)),backgroundColor:'rgba(34,211,238,0.7)',borderColor:'#22d3ee',borderWidth:1,borderRadius:2},
+      ]
+    },
+    options:{...chartDefaults,
+      scales:{
+        x:{grid:{color:'#1a2540'},ticks:{color:'#4a5c7a',font:{size:9}}},
+        y:{grid:{color:'#1a2540'},ticks:{color:'#4a5c7a'}}
+      }
+    }
+  });
+
+  // Scatter pass vs retention
+  const scData=composite.filter(d=>d.pass!=null&&d.ret!=null);
+  const maxN=Math.max(...scData.map(d=>{const base=d.s.split(' - ')[0];return nursesBySchool[base]||5;}));
+  dc('scatter');
+  charts['scatter']=new Chart(document.getElementById('scatter').getContext('2d'),{
+    type:'bubble',
+    data:{datasets:scData.map(d=>{
+      const base=d.s.split(' - ')[0];const n=nursesBySchool[base]||5;
+      return{label:toTitle(d.s),data:[{x:d.pass,y:d.ret*100,r:Math.max(5,Math.sqrt(n/maxN)*30)}],
+        backgroundColor:sc(d.s)+'bb',borderColor:sc(d.s),borderWidth:1};})},
+    options:{...chartDefaults,
+      plugins:{...chartDefaults.plugins,legend:{display:false},
+        tooltip:{...chartDefaults.plugins.tooltip,callbacks:{label:ctx=>{
+          const d=scData[ctx.datasetIndex];
+          return[toTitle(d.s),`Pass: ${d.pass.toFixed(1)}%`,`Retention: ${pct(d.ret)}`];
+        }}}},
+      scales:{
+        x:{min:70,max:100,grid:{color:'#1a2540'},ticks:{color:'#4a5c7a',callback:v=>v+'%'},
+           title:{display:true,text:'NCLEX Pass Rate',color:'#4a5c7a',font:{size:10}}},
+        y:{min:50,max:110,grid:{color:'#1a2540'},ticks:{color:'#4a5c7a',callback:v=>v+'%'},
+           title:{display:true,text:'Retention Rate',color:'#4a5c7a',font:{size:10}}}
+      }
+    },
+    plugins:[{id:'quad',beforeDraw(chart){
+      const{ctx,chartArea,scales}=chart;if(!chartArea)return;
+      const xM=scales.x.getPixelForValue(89),yM=scales.y.getPixelForValue(72);
+      ctx.save();ctx.fillStyle='rgba(34,197,94,0.05)';
+      ctx.fillRect(xM,chartArea.top,chartArea.right-xM,yM-chartArea.top);
+      ctx.strokeStyle='rgba(74,92,122,0.4)';ctx.setLineDash([4,4]);ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(xM,chartArea.top);ctx.lineTo(xM,chartArea.bottom);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(chartArea.left,yM);ctx.lineTo(chartArea.right,yM);ctx.stroke();
+      ctx.setLineDash([]);ctx.fillStyle='rgba(34,197,94,0.5)';ctx.font='10px IBM Plex Mono,monospace';
+      ctx.fillText('BEST ZONE',xM+6,chartArea.top+13);ctx.restore();
+    }}]
+  });
+
+  // GPA vs Pass
+  const gpaData=composite.filter(d=>d.gpa!=null&&d.pass!=null);
+  dc('gpaPass');
+  charts['gpaPass']=new Chart(document.getElementById('gpaPass').getContext('2d'),{
+    type:'scatter',
+    data:{datasets:[{
+      label:'Schools',
+      data:gpaData.map(d=>({x:d.gpa,y:d.pass})),
+      backgroundColor:gpaData.map(d=>sc(d.s)+'cc'),
+      borderColor:gpaData.map(d=>sc(d.s)),
+      borderWidth:1,pointRadius:7,pointHoverRadius:9,
+    }]},
+    options:{...chartDefaults,
+      plugins:{...chartDefaults.plugins,legend:{display:false},
+        tooltip:{...chartDefaults.plugins.tooltip,callbacks:{label:ctx=>{
+          const d=gpaData[ctx.dataIndex];
+          return[toTitle(d.s),`GPA: ${d.gpa.toFixed(2)}`,`Pass Rate: ${d.pass.toFixed(1)}%`];
+        }}}},
+      scales:{
+        x:{min:2.9,max:3.75,grid:{color:'#1a2540'},ticks:{color:'#4a5c7a'},
+           title:{display:true,text:'Average GPA',color:'#4a5c7a',font:{size:10}}},
+        y:{min:70,max:100,grid:{color:'#1a2540'},ticks:{color:'#4a5c7a',callback:v=>v+'%'},
+           title:{display:true,text:'NCLEX Pass Rate',color:'#4a5c7a',font:{size:10}}}
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HEATMAP
+// ═══════════════════════════════════════════════════════════════
+function renderHeatmap(){
+  const sorted=[...composite].sort((a,b)=>{
+    if(b.composite!=null&&a.composite!=null)return b.composite-a.composite;
+    if(b.composite!=null)return 1;if(a.composite!=null)return -1;
+    return(b.hardF||0)-(a.hardF||0);
+  });
+  const cols=[
+    {key:'gpaZ',label:'GPA Z'},
+    {key:'passZ',label:'Pass Z'},
+    {key:'hardF',label:'Hard Final'},
+    {key:'compZ',label:'Completion Z'},
+    {key:'retZ',label:'Retention Z'},
+    {key:'softF',label:'Soft Final'},
+    {key:'composite',label:'Composite'},
+  ];
+  let html=`<table class="heatmap"><thead><tr><th style="text-align:left">School</th>${cols.map(c=>`<th>${c.label}</th>`).join('')}</tr></thead><tbody>`;
+  sorted.forEach(d=>{
+    html+=`<tr><td class="row-label">${toTitle(d.s)}</td>`;
+    cols.forEach(c=>{
+      const v=d[c.key];
+      html+=`<td style="background:${zBg(v)};color:${v!=null?(v>=0?'#86efac':'#fca5a5'):'#4a5c7a'}">${zFmt(v)}</td>`;
+    });
+    html+=`</tr>`;
+  });
+  html+=`</tbody></table>`;
+  document.getElementById('heatmapWrap').innerHTML=html;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Z-SCORE CHARTS
+// ═══════════════════════════════════════════════════════════════
+function renderZBar(id,data,key,label,title){
+  const sorted=[...data].filter(d=>d[key]!=null).sort((a,b)=>b[key]-a[key]);
+  dc(id);
+  charts[id]=new Chart(document.getElementById(id).getContext('2d'),{
+    type:'bar',
+    data:{
+      labels:sorted.map(d=>toTitle(d.s.split(' - ')[0]).replace('University','Univ.').replace('College','Col.')),
+      datasets:[{
+        label,data:sorted.map(d=>+d[key].toFixed(3)),
+        backgroundColor:sorted.map(d=>zColor(d[key],0.7)),
+        borderColor:sorted.map(d=>zColor(d[key])),
+        borderWidth:1,borderRadius:4,
+      }]
+    },
+    options:{...chartDefaults,indexAxis:'y',
+      plugins:{...chartDefaults.plugins,legend:{display:false},
+        tooltip:{...chartDefaults.plugins.tooltip,callbacks:{label:ctx=>`${label}: ${ctx.raw>=0?'+':''}${ctx.raw}`}}},
+      scales:{
+        x:{grid:{color:'#1a2540'},ticks:{color:'#4a5c7a'},
+           title:{display:true,text:'Z-Score (0 = group average)',color:'#4a5c7a',font:{size:9}}},
+        y:{grid:{display:false},ticks:{color:'#8899b8',font:{size:9}}}
+      }
+    }
+  });
+}
+
+function renderZCharts(){
+  renderZBar('zGPA',composite,'gpaZ','GPA Z-Score');
+  renderZBar('zPass',composite,'passZ','NCLEX Pass Rate Z-Score');
+  renderZBar('zRet',composite.filter(d=>d.ret!=null),'retZ','Retention Rate Z-Score');
+  renderZBar('zComp',composite.filter(d=>d.comp!=null),'compZ','Completion % Z-Score');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RADAR CHARTS
+// ═══════════════════════════════════════════════════════════════
+function renderRadars(){
+  const withBoth=composite.filter(d=>d.hardF!=null&&d.softF!=null)
+    .sort((a,b)=>(b.composite||0)-(a.composite||0));
+  const grid=document.getElementById('radarGrid');
+  grid.innerHTML='';
+  withBoth.forEach((d,i)=>{
+    const div=document.createElement('div');
+    div.className='rcard'+(i<3?' highlight':'');
+    div.innerHTML=`<div class="rschool">${i<3?'⭐ ':''} ${toTitle(d.s)}</div><canvas id="radar_${i}" height="220"></canvas>`;
+    grid.appendChild(div);
+    setTimeout(()=>{
+      dc(`radar_${i}`);
+      charts[`radar_${i}`]=new Chart(document.getElementById(`radar_${i}`).getContext('2d'),{
+        type:'radar',
+        data:{
+          labels:['GPA Z','NCLEX Pass Z','Hard Score','Completion Z','Retention Z','Soft Score'],
+          datasets:[{
+            label:toTitle(d.s.split(' - ')[0]),
+            data:[d.gpaZ??0,d.passZ??0,d.hardF??0,d.compZ??0,d.retZ??0,d.softF??0],
+            backgroundColor:sc(d.s)+'33',borderColor:sc(d.s),
+            borderWidth:2,pointBackgroundColor:sc(d.s),pointRadius:3,
+          }]
+        },
+        options:{
+          responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{display:false},
+            tooltip:{backgroundColor:'#0e1422',borderColor:'#1a2540',borderWidth:1,
+              titleColor:'#fff',bodyColor:'#8899b8',padding:8}},
+          scales:{r:{
+            grid:{color:'#1a2540'},angleLines:{color:'#1a2540'},
+            pointLabels:{color:'#4a5c7a',font:{size:9}},
+            ticks:{color:'#4a5c7a',backdropColor:'transparent',font:{size:8}},
+            suggestedMin:-1.5,suggestedMax:1.5,
+          }}
+        }
+      });
+    },50);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TABLE
+// ═══════════════════════════════════════════════════════════════
+function renderTable(){
+  const typeF=document.getElementById('typeFilter').value;
+  const minPass=+document.getElementById('passFilter').value;
+  const sortKey=document.getElementById('sortBy').value;
+
+  let data=[...composite];
+  if(typeF!=='all')data=data.filter(d=>d.s.toLowerCase().includes(typeF));
+  if(minPass>70)data=data.filter(d=>d.pass==null||d.pass>=minPass);
+
+  const sortMap={composite:'composite',hard:'hardF',soft:'softF',pass:'pass',gpa:'gpa'};
+  const sk=sortMap[sortKey];
+  data.sort((a,b)=>{
+    const av=a[sk],bv=b[sk];
+    if(bv!=null&&av!=null)return bv-av;
+    if(bv!=null)return 1;if(av!=null)return -1;return 0;
+  });
+
+  document.getElementById('tHead').innerHTML=`<tr>
+    <th>School / Program</th>
+    <th>GPA</th><th>NCLEX Pass</th>
+    <th>GPA Z</th><th>Pass Z</th><th>Hard Score</th>
+    <th>Completion%</th><th>Retention</th>
+    <th>Soft Score</th><th>Composite Z</th><th>Rating</th>
+  </tr>`;
+
+  document.getElementById('tBody').innerHTML=data.map(d=>{
+    const comp=d.composite;
+    const tag=comp!=null?(comp>=0.4?'<span class="tag t-top">TOP PICK</span>':comp>=0.1?'<span class="tag t-mid">PROMISING</span>':'<span class="tag t-low">MONITOR</span>'):'<span class="tag t-na">PARTIAL DATA</span>';
+    return`<tr>
+      <td class="sch">${toTitle(d.s)}</td>
+      <td class="mono">${fmt(d.gpa,2)}</td>
+      <td class="mono">${d.pass!=null?d.pass.toFixed(1)+'%':'—'}</td>
+      <td class="zscore ${d.gpaZ!=null?(d.gpaZ>=0?'zpos':'zneg'):'znat'}">${zFmt(d.gpaZ)}</td>
+      <td class="zscore ${d.passZ!=null?(d.passZ>=0?'zpos':'zneg'):'znat'}">${zFmt(d.passZ)}</td>
+      <td class="zscore ${d.hardF!=null?(d.hardF>=0?'zpos':'zneg'):'znat'}">${zFmt(d.hardF)}</td>
+      <td class="mono">${d.compPct!=null?d.compPct.toFixed(1)+'%':'—'}</td>
+      <td class="mono">${d.ret!=null?pct(d.ret):'—'}</td>
+      <td class="zscore ${d.softF!=null?(d.softF>=0?'zpos':'zneg'):'znat'}">${zFmt(d.softF)}</td>
+      <td class="zscore ${comp!=null?(comp>=0?'zpos':'zneg'):'znat'}" style="font-weight:600">${zFmt(comp)}</td>
+      <td>${tag}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════════════
+function switchTab(id){
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    const ids=['overview','zscores','radar','detail'];
+    t.classList.toggle('active',ids[i]===id);
+  });
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+}
+
+window.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>

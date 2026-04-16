@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nursing School Collaborator Dashboard</title>
+<link rel="stylesheet" href="nursing_dashboard_v2.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="header-inner">
+      <div class="header-left">
+        <h1>Nursing School <span>Collaborator</span> Analysis</h1>
+        <p>EMORY HEALTHCARE · NURSING SCHOOL PARTNERS · VIZIENT HIRES + GA NCLEX + CLINICAL ROTATIONS · 2022–2025</p>
+      </div>
+      <div class="badge">RESEARCH DASHBOARD</div>
+    </div>
+  </header>
+
+  <!-- Global Controls -->
+  <div class="controls">
+    <div class="control-group">
+      <label>Filter by School</label>
+      <select id="schoolFilter"><option value="all">All Schools</option></select>
+    </div>
+    <div class="control-group">
+      <label>Min. Nurses Hired</label>
+      <input type="range" id="minNurses" min="1" max="1000" value="1" step="1">
+      <div class="range-val">≥ <span id="minNursesVal">1</span> nurses</div>
+    </div>
+    <div class="control-group">
+      <label>Min. Retention Rate</label>
+      <input type="range" id="minRetention" min="0" max="100" value="0" step="5">
+      <div class="range-val">≥ <span id="minRetentionVal">0</span>%</div>
+    </div>
+    <div class="control-group">
+      <label>Min. Pass Rate</label>
+      <input type="range" id="minPass" min="0" max="100" value="0" step="5">
+      <div class="range-val">≥ <span id="minPassVal">0</span>%</div>
+    </div>
+    <button class="reset-btn" onclick="resetFilters()">&#x21BA; Reset</button>
+  </div>
+
+  <!-- Global KPIs -->
+  <div class="kpi-row">
+    <div class="kpi-card blue">
+      <div class="kpi-label">Schools Analyzed</div>
+      <div class="kpi-value blue" id="kpiSchools">—</div>
+      <div class="kpi-sub">Schools in Vizient hire file</div>
+    </div>
+    <div class="kpi-card cyan">
+      <div class="kpi-label">Avg. Pass Rate</div>
+      <div class="kpi-value cyan" id="kpiPassRate">—</div>
+      <div class="kpi-sub">GA NCLEX (matched programs) · 2022–2025</div>
+    </div>
+    <div class="kpi-card gold">
+      <div class="kpi-label">Avg. Retention</div>
+      <div class="kpi-value gold" id="kpiRetention">—</div>
+      <div class="kpi-sub">Nurses still employed</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">Total Nurses Hired</div>
+      <div class="kpi-value green" id="kpiNurses">—</div>
+      <div class="kpi-sub">Across filtered schools</div>
+    </div>
+  </div>
+
+  <!-- Section Tabs -->
+  <nav class="section-nav">
+    <button class="section-tab tab-s1 active" onclick="switchTab('s1')">
+      <span class="tab-num">01</span> Academic Evaluation
+    </button>
+    <button class="section-tab tab-s2" onclick="switchTab('s2')">
+      <span class="tab-num">02</span> Commitment Evaluation
+    </button>
+    <button class="section-tab tab-s3" onclick="switchTab('s3')">
+      <span class="tab-num">03</span> Workforce Evaluation
+    </button>
+    <button class="section-tab tab-s4" onclick="switchTab('s4')">
+      <span class="tab-num">04</span> Combined Insights
+    </button>
+  </nav>
+
+  <!-- ── SECTION 1: Academic ─────────────────────────────────────────────────── -->
+  <div class="section-panel active" id="panel-s1">
+    <div class="section-header s1">
+      <div class="section-header-icon">&#x1F393;</div>
+      <div>
+        <div class="section-header-title">Academic Evaluation</div>
+        <div class="section-header-desc">NCLEX pass rates (Georgia RN program data, matched to hire schools) · Mean GPA from Vizient · Trends 2022–2025 · State benchmark: 80%</div>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">Pass Rate by School</div>
+        <div class="chart-sub">Average NCLEX pass rate · Color: ≥90% green · ≥80% amber · below red</div>
+        <div class="chart-wrap" style="height:340px"><canvas id="passRateChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">GPA by School</div>
+        <div class="chart-sub">Mean GPA from Vizient hire records · Schools without GPA shown in gray</div>
+        <div class="chart-wrap" style="height:340px"><canvas id="gpaChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="chart-card full" style="margin-bottom:24px">
+      <div class="chart-title">Pass Rate Trend (2022–2025)</div>
+      <div class="chart-sub">Select a school in the table below to highlight · Georgia state minimum: 80%</div>
+      <div class="chart-wrap" style="height:300px"><canvas id="trendChart"></canvas></div>
+    </div>
+
+    <div class="table-card">
+      <div class="chart-title" style="margin-bottom:4px">Academic Performance — All Schools</div>
+      <div class="chart-sub">Click row to highlight trend · Sorted by pass rate</div>
+      <table>
+        <thead>
+          <tr>
+            <th>School</th>
+            <th>Avg Pass Rate</th>
+            <th>2022</th>
+            <th>2023</th>
+            <th>2024</th>
+            <th>2025</th>
+            <th>GPA</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="academicTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── SECTION 2: Commitment ───────────────────────────────────────────────── -->
+  <div class="section-panel" id="panel-s2">
+    <div class="section-header s2">
+      <div class="section-header-icon">&#x1F91D;</div>
+      <div>
+        <div class="section-header-title">Commitment Evaluation</div>
+        <div class="section-header-desc">Vizient retention (hires still employed) · Cleaned_rotation mean hours per rotation row · Soft-skills composite rank from soft_skills_school_scores.csv</div>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">Retention rate (Vizient)</div>
+        <div class="chart-sub">Vizient_CLEANED_FINAL · Same schools as rotation chart: ≥5 hires and a completed-rotation average in Cleaned_rotation · Retention high → low</div>
+        <div class="chart-wrap" style="height:380px"><canvas id="retentionChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Mean hours per person (rotations)</div>
+        <div class="chart-sub">Only schools with rotation data · Mean <em>Total Hours per Person</em> from Cleaned_rotation (completed) · Same order as retention chart · Colors: ≥70h green · ≥55h amber · below red</div>
+        <div class="chart-wrap" style="height:420px"><canvas id="rotationChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="table-card" style="margin-top:8px">
+      <div class="chart-title" style="margin-bottom:4px">Soft skills final ranking</div>
+      <div class="chart-sub">Sorted by Final score from soft_skills_school_scores.csv (avg rotation hours + retention z-scores). Avg hr / retention columns match that file.</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>School</th>
+            <th>Final score</th>
+            <th>Avg hr / person</th>
+            <th>Retention rate</th>
+          </tr>
+        </thead>
+        <tbody id="softSkillsRankTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── SECTION 3: Workforce ────────────────────────────────────────────────── -->
+  <div class="section-panel" id="panel-s3">
+    <div class="section-header s3">
+      <div class="section-header-icon">&#x1F3E5;</div>
+      <div>
+        <div class="section-header-title">Workforce Evaluation</div>
+        <div class="section-header-desc">Hiring volume, clinical unit placement, and tenure analytics · Measures real-world contribution to Emory Healthcare staffing</div>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">Nurses Hired by School</div>
+        <div class="chart-sub">Nurses by education institution in Vizient · Top 12 schools</div>
+        <div class="chart-wrap" style="height:360px"><canvas id="nursesChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Average Tenure by School</div>
+        <div class="chart-sub">Years employed at Emory · Schools with ≥5 nurses</div>
+        <div class="chart-wrap" style="height:360px"><canvas id="tenureChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="chart-card full" style="margin-bottom:24px">
+      <div class="chart-title">Top Clinical Unit per School</div>
+      <div class="chart-sub">Most common unit placement for nurses from each school</div>
+      <div id="unitGrid" class="rotation-grid"></div>
+    </div>
+
+    <div class="charts-grid" style="margin-bottom:24px">
+      <div class="chart-card">
+        <div class="chart-title">Top Termination Reasons</div>
+        <div class="chart-sub">Why nurses leave Emory Healthcare (all schools)</div>
+        <div class="chart-wrap" style="height:280px"><canvas id="termReasonChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Nurses Hired per Year</div>
+        <div class="chart-sub">Volume trend by school for schools with ≥20 total nurses</div>
+        <div class="chart-wrap" style="height:280px"><canvas id="hiresYearChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="chart-title" style="margin-bottom:4px">Workforce — All Schools</div>
+      <div class="chart-sub">Sorted by nurses hired descending</div>
+      <table>
+        <thead>
+          <tr>
+            <th>School</th>
+            <th>Nurses Hired</th>
+            <th>Avg Tenure (yrs)</th>
+            <th>Top Clinical Unit</th>
+            <th>Top Leave Reason</th>
+            <th>Workforce Score</th>
+          </tr>
+        </thead>
+        <tbody id="workforceTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── SECTION 4: Combined Insights ──────────────────────────────────────── -->
+  <div class="section-panel" id="panel-s4">
+    <div class="section-header s4">
+      <div class="section-header-icon">&#x2B50;</div>
+      <div>
+        <div class="section-header-title">Combined Insights</div>
+        <div class="section-header-desc">Cross-section analysis · Z-score ranking · Multi-metric correlations · Overall school partner ranking</div>
+      </div>
+    </div>
+
+    <!-- Top 3 -->
+    <div style="margin-bottom:8px">
+      <div class="chart-title">Top Collaborator Schools</div>
+      <div class="chart-sub" style="margin-bottom:16px">Ranked by composite score: pass rate × retention × log(nurses hired)</div>
+    </div>
+    <div class="best-grid" id="bestGrid"></div>
+
+    <div class="charts-grid" style="margin-bottom:24px">
+      <div class="chart-card">
+        <div class="chart-title">Pass Rate vs Retention Rate</div>
+        <div class="chart-sub">Bubble size = nurses hired · Top-right = best collaborators</div>
+        <div class="chart-wrap" style="height:320px"><canvas id="scatterChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Pass Rate vs Tenure</div>
+        <div class="chart-sub">Does academic quality correlate with longer employment?</div>
+        <div class="chart-wrap" style="height:320px"><canvas id="scatter2Chart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="chart-card full" style="margin-bottom:24px">
+      <div class="chart-title">Multi-Metric Radar — Top 5 Schools</div>
+      <div class="chart-sub">Pass rate · Retention · Volume · Tenure · Combined score</div>
+      <div class="chart-wrap" style="height:340px"><canvas id="radarChart"></canvas></div>
+    </div>
+
+    <!-- Z-score table -->
+    <div class="table-card">
+      <div class="chart-title" style="margin-bottom:4px">All Schools — Z-Score Ranking</div>
+      <div class="chart-sub">Z-scores normalized across pass rate, retention, nurses hired, tenure · Higher = better relative to peer average · Click row to explore</div>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>School</th>
+            <th>Nurses Hired</th>
+            <th>Retention Rate</th>
+            <th>Avg Pass Rate</th>
+            <th>Avg Tenure (yrs)</th>
+            <th>Top Unit</th>
+            <th>Z-Score</th>
+            <th>Rating</th>
+          </tr>
+        </thead>
+        <tbody id="schoolTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>Emory Healthcare · Partnership analysis · Data: Cleaned Data folder (Vizient hires, Georgia RN NCLEX 2022–2025, clinical rotations). Refresh the dashboard bundle with <span class="footer-mono">python3 build_dashboard_data.py</span></footer>
+</div>
+
+<script src="nursing_dashboard_v2.data.js"></script>
+<script src="nursing_dashboard_v2.js"></script>
+</body>
+</html>

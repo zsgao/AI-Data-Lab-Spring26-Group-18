@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GA Nursing Programs — Academic Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f5f3;
+    --bg3: #efefeb;
+    --txt: #1a1a1a;
+    --txt2: #666660;
+    --txt3: #999990;
+    --border: rgba(0,0,0,0.1);
+    --border2: rgba(0,0,0,0.18);
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a1a;
+      --bg2: #242422;
+      --bg3: #2e2e2c;
+      --txt: #e5e5e3;
+      --txt2: #999990;
+      --txt3: #666660;
+      --border: rgba(255,255,255,0.1);
+      --border2: rgba(255,255,255,0.18);
+    }
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg3);
+    color: var(--txt);
+    min-height: 100vh;
+    padding: 2rem 1.5rem 3rem;
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  /* Header */
+  .header { margin-bottom: 2rem; padding-bottom: 1.25rem; border-bottom: 0.5px solid var(--border2); }
+  .header h1 { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; color: var(--txt); letter-spacing: -0.3px; }
+  .header p { font-size: 13px; color: var(--txt2); margin-top: 5px; }
+
+  /* Metric cards */
+  .metrics { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 1.5rem; }
+  .metric { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-md); padding: 14px 16px; }
+  .metric .label { font-size: 11px; color: var(--txt3); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .metric .val { font-size: 24px; font-weight: 500; color: var(--txt); line-height: 1; }
+  .metric .sub { font-size: 11px; color: var(--txt3); margin-top: 4px; }
+
+  /* Cards */
+  .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; }
+  .card-title { font-size: 14px; font-weight: 500; color: var(--txt); margin-bottom: 3px; }
+  .card-sub { font-size: 12px; color: var(--txt2); margin-bottom: 14px; }
+
+  .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .full-row { margin-bottom: 16px; }
+
+  /* Legend */
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--txt2); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  /* Ranking table */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead th { font-size: 11px; font-weight: 500; color: var(--txt2); text-align: left; padding: 7px 10px; border-bottom: 0.5px solid var(--border2); white-space: nowrap; }
+  tbody td { padding: 8px 10px; border-bottom: 0.5px solid var(--border); color: var(--txt); vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--bg2); }
+  .rank-num { font-size: 11px; color: var(--txt3); }
+
+  .badge { display: inline-block; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
+  .badge-top { background: #EAF3DE; color: #3B6D11; }
+  .badge-mid { background: #FAEEDA; color: #854F0B; }
+  .badge-low { background: #FCEBEB; color: #A32D2D; }
+
+  .bar-bg { background: var(--bg3); height: 5px; border-radius: 3px; min-width: 60px; flex: 1; }
+  .bar-fill { height: 5px; border-radius: 3px; }
+
+  @media (max-width: 700px) {
+    .charts-row { grid-template-columns: 1fr; }
+    .metrics { grid-template-columns: repeat(2, 1fr); }
+    body { padding: 1rem 1rem 2rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>Georgia RN Nursing Programs — Academic Evaluation</h1>
+    <p>Hard skills overview &middot; NCLEX pass rates, GPA rankings, and year-over-year trends &middot; 2022–2025</p>
+  </div>
+
+  <div class="metrics" id="metrics"></div>
+
+  <div class="full-row card">
+    <div class="card-title">Pass rate &amp; GPA by school</div>
+    <div class="card-sub">Top 20 programs by 4-year average NCLEX pass rate &middot; bubble size = total exams delivered</div>
+    <div class="legend" id="bubble-legend"></div>
+    <div style="position:relative;width:100%;height:360px;">
+      <canvas id="bubbleChart" role="img" aria-label="Bubble chart of top 20 Georgia nursing programs plotted by GPA and NCLEX pass rate.">
+        Schools plotted by GPA (x-axis) and NCLEX pass rate (y-axis). Bubble size represents total exams delivered.
+      </canvas>
+    </div>
+  </div>
+
+  <div class="charts-row">
+    <div class="card">
+      <div class="card-title">Pass rate trend &middot; 2022–2025</div>
+      <div class="card-sub">Year-by-year average pass rate across all programs</div>
+      <div style="position:relative;width:100%;height:230px;">
+        <canvas id="trendChart" role="img" aria-label="Line chart showing average NCLEX pass rate trend from 2022 to 2025.">
+          Statewide average pass rate by year.
+        </canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">GPA distribution</div>
+      <div class="card-sub">Average GPA by school (top 16, descending)</div>
+      <div style="position:relative;width:100%;height:230px;">
+        <canvas id="gpaChart" role="img" aria-label="Horizontal bar chart of average GPA by Georgia nursing school.">
+          GPA values ranging from approximately 3.0 to 3.75.
+        </canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">School rankings — combined score</div>
+    <div class="card-sub">Ranked by composite z-score (GPA + NCLEX pass rate)</div>
+    <div class="table-wrap" id="rankTable"></div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
+const txt    = isDark ? '#e5e5e3' : '#1a1a1a';
+const txtMuted = isDark ? '#999990' : '#666660';
+const gridColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
+
+/* ── DATA ── */
+const nclex = [
+  {name:'Abraham Baldwin',      type:'Associates', y22:78.15, y23:82.35, y24:97.62, y25:100,   total:401,  avg:88.53},
+  {name:'Albany State',         type:'Associates', y22:72.53, y23:86.39, y24:95.65, y25:86.13, total:581,  avg:83.82},
+  {name:'Albany State',         type:'Bachelors',  y22:78.57, y23:100,   y24:91.67, y25:83.33, total:48,   avg:89.58},
+  {name:'Albany Technical',     type:'Associates', y22:81.82, y23:100,   y24:100,   y25:96.67, total:88,   avg:94.32},
+  {name:'Athens Technical',     type:'Associates', y22:90,    y23:100,   y24:100,   y25:94.44, total:191,  avg:96.34},
+  {name:'Atlanta Technical',    type:'Associates', y22:80,    y23:100,   y24:100,   y25:100,   total:59,   avg:96.61},
+  {name:'Augusta University',   type:'Bachelors',  y22:79.52, y23:96.45, y24:93.83, y25:90.18, total:660,  avg:90.00},
+  {name:'Augusta University',   type:'Masters',    y22:84.09, y23:87.59, y24:94.12, y25:90.55, total:540,  avg:92.41},
+  {name:'Berry College',        type:'Bachelors',  y22:78.13, y23:100,   y24:100,   y25:100,   total:116,  avg:93.97},
+  {name:'Brenau University',    type:'Bachelors',  y22:85.25, y23:77.92, y24:85.42, y25:88.89, total:276,  avg:88.41},
+  {name:'Brenau University',    type:'Masters',    y22:null,  y23:100,   y24:98.57, y25:87.65, total:202,  avg:94.55},
+  {name:'Central Georgia Tech', type:'Associates', y22:70.59, y23:97.37, y24:91.07, y25:76.06, total:199,  avg:83.42},
+  {name:'Chamberlain Univ.',    type:'Bachelors',  y22:79.51, y23:79.58, y24:77.92, y25:79.76, total:1487, avg:79.15},
+  {name:'Chattahoochee Tech',   type:'Associates', y22:100,   y23:95.12, y24:100,   y25:100,   total:160,  avg:98.75},
+  {name:'Clayton State',        type:'Bachelors',  y22:80.25, y23:88.16, y24:94.29, y25:95.12, total:233,  avg:87.55},
+  {name:'Columbus State',       type:'Bachelors',  y22:87.18, y23:96.67, y24:95.95, y25:95.74, total:220,  avg:94.55},
+  {name:'Emory University',     type:'Bachelors',  y22:85.94, y23:94.04, y24:94.23, y25:89.13, total:683,  avg:90.48},
+  {name:'Emory University',     type:'Masters',    y22:84.21, y23:89.94, y24:90.12, y25:78.27, total:1250, avg:85.76},
+  {name:'GA Baptist/Mercer',    type:'Bachelors',  y22:81.31, y23:90.64, y24:95.65, y25:90.08, total:661,  avg:88.96},
+  {name:'GA College & State',   type:'Bachelors',  y22:88.99, y23:94.81, y24:91.55, y25:93.94, total:518,  avg:92.47},
+  {name:'Georgia Gwinnett',     type:'Bachelors',  y22:94.74, y23:96.3,  y24:100,   y25:83.58, total:241,  avg:93.36},
+  {name:'Georgia Highlands',    type:'Associates', y22:85.06, y23:96.34, y24:96,    y25:90.99, total:380,  avg:92.11},
+  {name:'Georgia Northwestern', type:'Associates', y22:86.36, y23:100,   y24:100,   y25:100,   total:64,   avg:95.31},
+  {name:'Georgia Southern',     type:'Bachelors',  y22:80.99, y23:88.79, y24:92.94, y25:85.62, total:1237, avg:87.31},
+  {name:'Georgia State',        type:'Associates', y22:95.92, y23:98.89, y24:100,   y25:96.67, total:356,  avg:97.75},
+  {name:'Georgia State',        type:'Bachelors',  y22:83.69, y23:83.64, y24:92.25, y25:89.56, total:575,  avg:87.65},
+  {name:'Gordon State',         type:'Associates', y22:84.62, y23:88.89, y24:97.87, y25:80.43, total:177,  avg:88.14},
+  {name:'Gordon State',         type:'Bachelors',  y22:84.38, y23:84.44, y24:86.05, y25:82.22, total:165,  avg:84.24},
+  {name:'Herzing University',   type:'Bachelors',  y22:36.36, y23:90.32, y24:80.52, y25:80,    total:176,  avg:73.86},
+  {name:'Kennesaw State',       type:'Bachelors',  y22:88.11, y23:90.7,  y24:96.55, y25:89.38, total:1250, avg:91.28},
+  {name:'Middle GA State',      type:'Associates', y22:86.9,  y23:94.12, y24:96,    y25:96.67, total:245,  avg:92.65},
+  {name:'Middle GA State',      type:'Bachelors',  y22:93.18, y23:97.52, y24:100,   y25:96.77, total:372,  avg:96.51},
+  {name:'North GA Technical',   type:'Associates', y22:91.43, y23:100,   y24:100,   y25:98.25, total:166,  avg:97.59},
+  {name:'Reinhardt University', type:'Bachelors',  y22:84,    y23:94.59, y24:100,   y25:100,   total:114,  avg:94.74},
+  {name:'Shorter University',   type:'Bachelors',  y22:89.47, y23:85.71, y24:92.31, y25:71.43, total:94,   avg:85.11},
+  {name:'Southeastern Tech',    type:'Associates', y22:90,    y23:100,   y24:100,   y25:92.11, total:171,  avg:95.91},
+  {name:'Southern Crescent',    type:'Associates', y22:86.84, y23:92.68, y24:87.5,  y25:92.11, total:195,  avg:90.26},
+  {name:'Univ. of North GA',    type:'Bachelors',  y22:87.77, y23:95.65, y24:96.74, y25:92.54, total:734,  avg:93.05},
+  {name:'Univ. of West GA',     type:'Bachelors',  y22:71.64, y23:84.43, y24:93.01, y25:83.33, total:594,  avg:83.33},
+  {name:'Valdosta State',       type:'Bachelors',  y22:83.72, y23:94.05, y24:94.05, y25:95.71, total:324,  avg:90.74},
+  {name:'West GA Technical',    type:'Associates', y22:90.7,  y23:96.88, y24:95.56, y25:94.74, total:158,  avg:94.30},
+];
+
+const gpaData = [
+  {school:'Capella University',          gpa:3.75},
+  {school:'Jacksonville University',     gpa:3.75},
+  {school:'Duke University',             gpa:3.70},
+  {school:'Reinhardt University',        gpa:3.65},
+  {school:'Xavier University',           gpa:3.625},
+  {school:'Emory University',            gpa:3.624},
+  {school:'Univ. of North Georgia',      gpa:3.591},
+  {school:'Univ. of West Georgia',       gpa:3.585},
+  {school:'Kennesaw State',              gpa:3.572},
+  {school:'Georgia State University',    gpa:3.571},
+  {school:'Baylor University',           gpa:3.55},
+  {school:'Univ. of South Carolina',     gpa:3.536},
+  {school:'Georgia Gwinnett',            gpa:3.507},
+  {school:'Univ. of Cincinnati',         gpa:3.50},
+  {school:'Mercer University',           gpa:3.483},
+  {school:'Brenau University',           gpa:3.435},
+];
+
+const zScores = [
+  {school:'Reinhardt University',       gpa:3.65,  nclex:94.74, score:1.12},
+  {school:'Georgia State (Assoc.)',     gpa:3.571, nclex:97.75, score:1.07},
+  {school:'Univ. of North Georgia',     gpa:3.591, nclex:93.05, score:0.80},
+  {school:'Emory University (Bach.)',   gpa:3.624, nclex:90.48, score:0.73},
+  {school:'Kennesaw State',             gpa:3.572, nclex:91.28, score:0.61},
+  {school:'Georgia Gwinnett',           gpa:3.507, nclex:93.36, score:0.54},
+  {school:'Emory University (Masters)', gpa:3.624, nclex:85.76, score:0.40},
+  {school:'Brenau (Masters)',           gpa:3.435, nclex:94.55, score:0.38},
+  {school:'Georgia State (Bach.)',      gpa:3.571, nclex:87.65, score:0.35},
+  {school:'Univ. of West Georgia',      gpa:3.585, nclex:83.33, score:0.09},
+  {school:'Columbus State',             gpa:3.317, nclex:94.55, score:-0.03},
+  {school:'Brenau (Bach.)',             gpa:3.435, nclex:88.41, score:-0.06},
+  {school:'Georgia College & State',    gpa:3.333, nclex:92.47, score:-0.12},
+  {school:'Georgia Highlands',          gpa:3.25,  nclex:92.11, score:-0.43},
+  {school:'Albany State',               gpa:3.25,  nclex:89.58, score:-0.60},
+  {school:'Gordon State (Bach.)',       gpa:3.25,  nclex:88.14, score:-0.71},
+  {school:'Atlanta Technical',          gpa:3.023, nclex:96.61, score:-0.88},
+  {school:'Gordon State (Assoc.)',      gpa:3.25,  nclex:84.24, score:-0.98},
+  {school:'Albany State (Assoc.)',      gpa:3.25,  nclex:83.82, score:-1.01},
+  {school:'Herzing University',         gpa:3.381, nclex:73.86, score:-1.27},
+];
+
+/* ── METRICS ── */
+const allAvg = (nclex.reduce((a,s)=>a+s.avg,0)/nclex.length).toFixed(1);
+const top25avg = (nclex.reduce((a,s)=>a+s.y25,0)/nclex.length).toFixed(1);
+document.getElementById('metrics').innerHTML = `
+  <div class="metric"><div class="label">4-yr avg pass rate</div><div class="val">${allAvg}%</div><div class="sub">across all programs</div></div>
+  <div class="metric"><div class="label">2025 avg pass rate</div><div class="val">${top25avg}%</div><div class="sub">latest year</div></div>
+  <div class="metric"><div class="label">Top composite school</div><div class="val" style="font-size:15px;padding-top:6px;">Reinhardt</div><div class="sub">z-score: +1.12</div></div>
+  <div class="metric"><div class="label">Total programs tracked</div><div class="val">${nclex.length}</div><div class="sub">GA RN programs</div></div>
+`;
+
+/* ── BUBBLE CHART ── */
+const typeColors = {Associates:'#378ADD', Bachelors:'#1D9E75', Masters:'#D85A30'};
+const typeLabels = {Associates:'Associates', Bachelors:'Bachelors', Masters:'Masters / Pre-Lic.'};
+
+document.getElementById('bubble-legend').innerHTML =
+  Object.entries(typeColors).map(([k,c])=>
+    `<span class="legend-item"><span class="legend-dot" style="background:${c};"></span>${typeLabels[k]}</span>`
+  ).join('');
+
+const schoolGpaMap = {
+  'Reinhardt University':3.65,'Georgia State':3.571,'Univ. of North GA':3.591,
+  'Emory University':3.624,'Kennesaw State':3.572,'Georgia Gwinnett':3.507,
+  'Brenau University':3.435,'Univ. of West GA':3.585,'Columbus State':3.317,
+  'GA College & State':3.333,'Georgia Highlands':3.25,'Albany State':3.25,
+  'Gordon State':3.25,'Atlanta Technical':3.023,'Herzing University':3.381,
+  'Berry College':3.48,'Augusta University':3.48,'Middle GA State':3.30,
+  'Chattahoochee Tech':3.30,'North GA Technical':3.30,
+};
+
+const top20 = [...nclex].sort((a,b)=>b.avg-a.avg).slice(0,20);
+const bubbleData = top20.map(s=>({
+  x: schoolGpaMap[s.name] || 3.35,
+  y: s.avg,
+  r: Math.sqrt(s.total) / 2.8,
+  label: s.name,
+  type: s.type,
+}));
+
+new Chart(document.getElementById('bubbleChart'), {
+  type: 'bubble',
+  data: {
+    datasets: ['Associates','Bachelors','Masters'].map(t=>({
+      label: typeLabels[t],
+      data: bubbleData.filter(d=>d.type===t),
+      backgroundColor: typeColors[t]+'99',
+      borderColor: typeColors[t],
+      borderWidth: 1.5,
+    }))
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    layout: { padding: { top:20, right:20, bottom:10, left:10 } },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: ctx => {
+            const d = ctx.raw;
+            return [`${d.label} (${ctx.dataset.label})`, `GPA: ${d.x.toFixed(2)}`, `Pass rate: ${d.y.toFixed(1)}%`];
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        title: { display:true, text:'Average GPA', color:txtMuted, font:{size:11} },
+        min:2.9, max:3.85,
+        ticks: { color:txtMuted, font:{size:11}, callback: v => v.toFixed(2) },
+        grid: { color:gridColor },
+      },
+      y: {
+        title: { display:true, text:'NCLEX pass rate (%)', color:txtMuted, font:{size:11} },
+        min:70, max:105,
+        ticks: { color:txtMuted, font:{size:11}, callback: v => v+'%' },
+        grid: { color:gridColor },
+      }
+    }
+  }
+});
+
+/* ── TREND CHART ── */
+const validYears = [
+  nclex.filter(s=>s.y22!=null).map(s=>s.y22),
+  nclex.filter(s=>s.y23!=null).map(s=>s.y23),
+  nclex.filter(s=>s.y24!=null).map(s=>s.y24),
+  nclex.filter(s=>s.y25!=null).map(s=>s.y25),
+];
+const yearAvgs = validYears.map(arr => parseFloat((arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1)));
+
+new Chart(document.getElementById('trendChart'), {
+  type: 'line',
+  data: {
+    labels: ['2022','2023','2024','2025'],
+    datasets: [{
+      label: 'Avg pass rate',
+      data: yearAvgs,
+      borderColor: '#1D9E75',
+      backgroundColor: '#1D9E7522',
+      fill: true,
+      tension: 0.4,
+      pointBackgroundColor: '#1D9E75',
+      pointRadius: 5,
+      borderWidth: 2,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display:false },
+      tooltip: { callbacks: { label: c => `${c.parsed.y.toFixed(1)}%` } }
+    },
+    scales: {
+      x: { ticks:{color:txtMuted, font:{size:11}}, grid:{color:gridColor} },
+      y: { min:82, max:96, ticks:{color:txtMuted, font:{size:11}, callback: v => v+'%'}, grid:{color:gridColor} }
+    }
+  }
+});
+
+/* ── GPA CHART ── */
+new Chart(document.getElementById('gpaChart'), {
+  type: 'bar',
+  data: {
+    labels: gpaData.map(d => d.school.length > 22 ? d.school.slice(0,22)+'…' : d.school),
+    datasets: [{
+      data: gpaData.map(d=>d.gpa),
+      backgroundColor: gpaData.map(d => d.gpa>=3.6?'#1D9E7599' : d.gpa>=3.4?'#BA751799' : '#37439D99'),
+      borderColor:      gpaData.map(d => d.gpa>=3.6?'#1D9E75'   : d.gpa>=3.4?'#BA7517'   : '#37439D'),
+      borderWidth: 1.5,
+      borderRadius: 3,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display:false },
+      tooltip: { callbacks: { label: c => `GPA: ${c.parsed.x.toFixed(2)}` } }
+    },
+    scales: {
+      x: { min:2.8, max:3.85, ticks:{color:txtMuted, font:{size:10}, callback: v => v.toFixed(2)}, grid:{color:gridColor} },
+      y: { ticks:{color:txtMuted, font:{size:10}}, grid:{display:false} }
+    }
+  }
+});
+
+/* ── RANKINGS TABLE ── */
+const getBadge = s => s >= 0.5
+  ? `<span class="badge badge-top">Top tier</span>`
+  : s >= -0.3
+    ? `<span class="badge badge-mid">Mid tier</span>`
+    : `<span class="badge badge-low">Below avg</span>`;
+
+document.getElementById('rankTable').innerHTML = `
+<table>
+  <thead>
+    <tr>
+      <th>#</th><th>School</th><th>GPA</th><th>NCLEX avg</th><th>Composite score</th><th>Tier</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${zScores.map((s,i) => {
+      const barW = Math.round(((s.score + 1.5) / 2.8) * 100);
+      const sign  = s.score > 0 ? '+' : '';
+      return `<tr>
+        <td class="rank-num">${i+1}</td>
+        <td style="font-weight:500">${s.school}</td>
+        <td>${s.gpa.toFixed(2)}</td>
+        <td>${s.nclex.toFixed(1)}%</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="bar-bg">
+              <div class="bar-fill" style="width:${Math.max(4,barW)}%;background:${s.score>0?'#1D9E75':'#E24B4A'};"></div>
+            </div>
+            <span style="font-size:11px;min-width:36px;color:${s.score>0?'#0F6E56':'#A32D2D'}">${sign}${s.score.toFixed(2)}</span>
+          </div>
+        </td>
+        <td>${getBadge(s.score)}</td>
+      </tr>`;
+    }).join('')}
+  </tbody>
+</table>`;
+</script>
+</body>
+</html>

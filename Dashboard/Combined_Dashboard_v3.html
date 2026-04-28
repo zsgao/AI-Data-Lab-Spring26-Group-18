@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Emory Healthcare · Nursing School Partner Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:      #f8fafc;
+  --surface: #ffffff;
+  --surf2:   #f1f5f9;
+  --surf3:   #f8fafc;
+  --border:  #e2e8f0;
+  --border2: #cbd5e1;
+  --accent:  #2563eb;
+  --cyan:    #0891b2;
+  --gold:    #d97706;
+  --green:   #059669;
+  --red:     #dc2626;
+  --purple:  #7c3aed;
+  --coral:   #ea580c;
+  --text:    #0f172a;
+  --muted:   #64748b;
+  --serif:   'DM Serif Display', serif;
+  --mono:    'DM Mono', monospace;
+  --sans:    'Outfit', sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(59,130,246,.03)1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,.03)1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+.container{max-width:1400px;margin:0 auto;padding:0 28px;position:relative;z-index:1}
+
+/* ── HEADER ── */
+header{border-bottom:1px solid var(--border);padding:26px 0 22px;margin-bottom:24px}
+.header-inner{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.header-left h1{font-family:var(--serif);font-size:2rem;color:var(--text);line-height:1.1;letter-spacing:-.4px}
+.header-left p{color:var(--muted);font-size:.8rem;margin-top:5px;font-weight:300;letter-spacing:.5px}
+.header-right{display:flex;align-items:center;gap:10px}
+.badge{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);color:var(--cyan);font-family:var(--mono);font-size:.68rem;padding:4px 10px;border-radius:4px;letter-spacing:1px}
+
+/* ── GLOBAL FILTER BAR ── */
+.filter-bar{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 22px;margin-bottom:22px;display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg label{font-size:.68rem;color:var(--muted);font-family:var(--mono);letter-spacing:1px;text-transform:uppercase}
+.fg select,.fg input[type=text]{background:var(--surf3);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 11px;font-family:var(--sans);font-size:.82rem;outline:none;cursor:pointer;min-width:170px;transition:border-color .2s}
+.fg select:hover,.fg select:focus{border-color:var(--accent)}
+.fg input[type=range]{padding:3px 0;accent-color:var(--accent);min-width:140px;cursor:pointer}
+.rv{font-family:var(--mono);font-size:.73rem;color:var(--accent);margin-top:1px}
+.reset-btn{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:7px 15px;font-family:var(--sans);font-size:.78rem;cursor:pointer;transition:all .2s;align-self:flex-end;white-space:nowrap}
+.reset-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── KPI ROW ── */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+@media(max-width:900px){.kpi-row{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden;transition:border-color .2s}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.kpi.blue::before{background:linear-gradient(90deg,var(--accent),transparent)}
+.kpi.cyan::before{background:linear-gradient(90deg,var(--cyan),transparent)}
+.kpi.gold::before{background:linear-gradient(90deg,var(--gold),transparent)}
+.kpi.green::before{background:linear-gradient(90deg,var(--green),transparent)}
+.kpi.purple::before{background:linear-gradient(90deg,var(--purple),transparent)}
+.kpi-label{font-size:.68rem;color:var(--muted);font-family:var(--mono);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+.kpi-val{font-family:var(--serif);font-size:1.9rem;color:var(--text);line-height:1}
+.kpi-val.blue{color:var(--accent)}.kpi-val.cyan{color:var(--cyan)}.kpi-val.gold{color:var(--gold)}.kpi-val.green{color:var(--green)}.kpi-val.purple{color:var(--purple)}
+.kpi-sub{font-size:.72rem;color:var(--muted);margin-top:5px}
+
+/* ── PAGE NAV ── */
+.page-nav{display:flex;gap:4px;margin-bottom:24px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:6px}
+.pnav-btn{flex:1;background:transparent;border:none;color:var(--muted);font-family:var(--sans);font-size:.82rem;font-weight:400;padding:10px 12px;border-radius:8px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}
+.pnav-btn .tab-num{font-family:var(--mono);font-size:.65rem;background:rgba(100,116,139,.2);padding:2px 5px;border-radius:3px;color:var(--muted);transition:all .2s}
+.pnav-btn:hover{color:var(--text);background:var(--surf3)}
+.pnav-btn.active{background:var(--surf3);color:var(--text);border:1px solid var(--border2)}
+.pnav-btn.active .tab-num{background:rgba(59,130,246,.25);color:var(--accent)}
+@media(max-width:700px){.pnav-btn span.tab-label{display:none}.page-nav{gap:2px}}
+
+/* ── PAGE PANELS ── */
+.page-panel{display:none}
+.page-panel.active{display:block}
+
+/* ── SECTION HEADER ── */
+.sec-hdr{display:flex;align-items:flex-start;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 22px;margin-bottom:22px}
+.sec-hdr-icon{font-size:1.6rem;flex-shrink:0;margin-top:2px}
+.sec-hdr-title{font-family:var(--serif);font-size:1.3rem;color:var(--text);margin-bottom:3px}
+.sec-hdr-desc{font-size:.78rem;color:var(--muted);line-height:1.5}
+.sec-hdr.s1{border-color:rgba(59,130,246,.3)}
+.sec-hdr.s2{border-color:rgba(16,185,129,.3)}
+.sec-hdr.s3{border-color:rgba(245,158,11,.3)}
+.sec-hdr.s4{border-color:rgba(167,139,250,.3)}
+
+/* ── CHART CARDS ── */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px}
+@media(max-width:900px){.charts-grid{grid-template-columns:1fr}}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px}
+.chart-card.full{grid-column:1/-1}
+.chart-card.mb{margin-bottom:20px}
+.ct{font-family:var(--serif);font-size:1.05rem;color:var(--text);margin-bottom:3px}
+.cs{font-size:.73rem;color:var(--muted);margin-bottom:16px;line-height:1.4}
+.cw{position:relative}
+
+/* ── TABLES ── */
+.table-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px;margin-bottom:20px;overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead tr{border-bottom:1px solid var(--border)}
+th{text-align:left;font-size:.67rem;font-family:var(--mono);color:var(--muted);letter-spacing:1px;text-transform:uppercase;padding:0 10px 10px;white-space:nowrap}
+td{padding:11px 10px;font-size:.8rem;border-bottom:1px solid rgba(30,45,69,.5);vertical-align:middle}
+tbody tr{transition:background .15s;cursor:pointer}
+tbody tr:hover{background:var(--surf3)}
+tbody tr.sel{background:rgba(59,130,246,.07);border-left:2px solid var(--accent)}
+.snc{font-weight:500;color:var(--text);text-transform:capitalize}
+
+/* ── BADGES / TAGS ── */
+.tag{display:inline-block;font-size:.63rem;font-family:var(--mono);padding:3px 7px;border-radius:4px;letter-spacing:.4px;white-space:nowrap}
+.tag-top{background:rgba(16,185,129,.15);color:var(--green);border:1px solid rgba(16,185,129,.3)}
+.tag-mid{background:rgba(245,158,11,.15);color:var(--gold);border:1px solid rgba(245,158,11,.3)}
+.tag-low{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3)}
+.tag-na{background:rgba(100,116,139,.15);color:var(--muted);border:1px solid rgba(100,116,139,.2)}
+
+/* ── SCORE BAR ── */
+.sb-wrap{display:flex;align-items:center;gap:7px}
+.sb-bg{height:4px;border-radius:2px;background:var(--border);flex:1;min-width:48px}
+.sb-fill{height:100%;border-radius:2px;transition:width .5s}
+
+/* ── BEST CARDS ── */
+.best-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px}
+@media(max-width:700px){.best-grid{grid-template-columns:1fr}}
+.best-card{background:var(--surface);border:1px solid rgba(16,185,129,.3);border-radius:12px;padding:18px;position:relative;overflow:hidden}
+.best-card::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top left,rgba(16,185,129,.05),transparent 60%);pointer-events:none}
+.best-rank{font-family:var(--serif);font-size:2.2rem;color:rgba(16,185,129,.15);position:absolute;top:10px;right:14px;line-height:1}
+.best-school{font-family:var(--serif);font-size:1rem;color:var(--text);text-transform:capitalize;margin-bottom:10px;line-height:1.25;padding-right:36px}
+.bm{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.bml{font-size:.68rem;color:var(--muted);font-family:var(--mono)}
+.bmv{font-size:.78rem;font-weight:600;font-family:var(--mono)}
+
+/* ── UNIT GRID ── */
+.unit-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.unit-item{background:var(--surf3);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+.unit-school{font-size:.72rem;color:var(--muted);text-transform:capitalize;margin-bottom:4px}
+.unit-name{font-size:.8rem;color:var(--text);font-weight:500}
+
+/* ── LEGEND ── */
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px}
+.li{display:flex;align-items:center;gap:5px;font-size:.75rem;color:var(--muted)}
+.ld{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+
+/* ── FOOTER ── */
+footer{border-top:1px solid var(--border);padding:18px 0;text-align:center;color:var(--muted);font-size:.72rem;margin-top:8px}
+footer .mono{font-family:var(--mono);color:var(--accent);font-size:.68rem}
+
+/* ── TOOLTIP OVERRIDE ── */
+.tip-dark{background:#111827;border:1px solid #1e2d45;border-radius:6px;color:#94a3b8;padding:10px 12px;font-size:.78rem}
+
+
+/* ── WHITE THEME OVERRIDES ── */
+body::before{display:none!important}
+body{background:linear-gradient(180deg,#f8fafc 0%,#ffffff 45%,#f8fafc 100%)!important;color:#0f172a!important}
+.container{color:#0f172a!important}
+header{border-bottom:1px solid #e2e8f0!important;background:transparent!important}
+.header-left h1,.header-left h1 span{color:#0f172a!important}
+.header-left p{color:#64748b!important}
+.badge{background:#eff6ff!important;border-color:#bfdbfe!important;color:#2563eb!important}
+.filter-bar,.page-nav,.kpi,.sec-hdr,.chart-card,.table-card,.best-card{background:#ffffff!important;border-color:#e2e8f0!important;box-shadow:0 10px 30px rgba(15,23,42,.06)!important}
+.fg label,.kpi-label,.pnav-btn,.pnav-btn .tab-num,.sec-hdr-desc,.cs,.kpi-sub,th,.li,footer,.unit-school,.bml{color:#64748b!important}
+.fg select,.fg input[type=text]{background:#f8fafc!important;border-color:#cbd5e1!important;color:#0f172a!important}
+.reset-btn{background:#ffffff!important;border-color:#cbd5e1!important;color:#475569!important}
+.reset-btn:hover{background:#eff6ff!important;border-color:#2563eb!important;color:#2563eb!important}
+.pnav-btn:hover{background:#f1f5f9!important;color:#0f172a!important}
+.pnav-btn.active{background:#eff6ff!important;color:#0f172a!important;border-color:#bfdbfe!important}
+.pnav-btn .tab-num{background:#f1f5f9!important;color:#64748b!important}
+.pnav-btn.active .tab-num{background:#dbeafe!important;color:#2563eb!important}
+.sec-hdr-title,.ct,.snc,.best-school,.unit-name,.kpi-val,td{color:#0f172a!important}
+.kpi-val.blue{color:#2563eb!important}.kpi-val.cyan{color:#0891b2!important}.kpi-val.gold{color:#d97706!important}.kpi-val.green{color:#059669!important}.kpi-val.purple{color:#7c3aed!important}
+thead tr,td{border-bottom-color:#e2e8f0!important}
+tbody tr:hover{background:#f8fafc!important}
+tbody tr.sel{background:#eff6ff!important;border-left-color:#2563eb!important}
+.sb-bg{background:#e2e8f0!important}
+.unit-item{background:#f8fafc!important;border-color:#e2e8f0!important}
+.best-card::after{background:radial-gradient(ellipse at top left,rgba(37,99,235,.06),transparent 60%)!important}
+.best-rank{color:rgba(37,99,235,.14)!important}
+footer{border-top-color:#e2e8f0!important}
+footer .mono,.rv{color:#2563eb!important}
+.tag-top{background:#ecfdf5!important;color:#047857!important;border-color:#a7f3d0!important}
+.tag-mid{background:#fffbeb!important;color:#b45309!important;border-color:#fde68a!important}
+.tag-low{background:#fef2f2!important;color:#b91c1c!important;border-color:#fecaca!important}
+.tag-na{background:#f1f5f9!important;color:#64748b!important;border-color:#e2e8f0!important}
+.tip-dark{background:#ffffff!important;border-color:#e2e8f0!important;color:#334155!important}
+
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <div class="header-left">
+      <h1>Nursing School <span>Partner</span> Dashboard</h1>
+    </div>
+  </div>
+</header>
+
+<!-- GLOBAL FILTERS -->
+<div class="filter-bar">
+  <div class="fg">
+    <label>Filter by School</label>
+    <select id="schoolFilter"><option value="all">All Schools</option></select>
+  </div>
+  <div class="fg">
+    <label>Min. Nurses Hired</label>
+    <input type="range" id="minNurses" min="1" max="375" value="1" step="1">
+    <div class="rv">≥ <span id="minNursesVal">1</span> nurses</div>
+  </div>
+  <div class="fg">
+    <label>Min. Retention Rate</label>
+    <input type="range" id="minRetention" min="0" max="100" value="0" step="5">
+    <div class="rv">≥ <span id="minRetVal">0</span>%</div>
+  </div>
+  <div class="fg">
+    <label>Min. Pass Rate</label>
+    <input type="range" id="minPass" min="0" max="100" value="0" step="5">
+    <div class="rv">≥ <span id="minPassVal">0</span>%</div>
+  </div>
+  <button class="reset-btn" onclick="resetFilters()">↺ Reset Filters</button>
+</div>
+
+<!-- KPI ROW -->
+<div class="kpi-row">
+  <div class="kpi blue"><div class="kpi-label">Schools Analyzed</div><div class="kpi-val blue" id="kpiSchools">—</div><div class="kpi-sub">In filtered view</div></div>
+  <div class="kpi cyan"><div class="kpi-label">Avg NCLEX Pass Rate</div><div class="kpi-val cyan" id="kpiPass">—</div><div class="kpi-sub">GA programs · 2022–2025</div></div>
+  <div class="kpi gold"><div class="kpi-label">Avg Retention</div><div class="kpi-val gold" id="kpiRet">—</div><div class="kpi-sub">Still employed at Emory</div></div>
+  <div class="kpi green"><div class="kpi-label">Total Nurses Hired</div><div class="kpi-val green" id="kpiNurses">—</div><div class="kpi-sub">Across filtered schools</div></div>
+</div>
+
+<!-- PAGE NAV -->
+<nav class="page-nav">
+  <button class="pnav-btn active" id="nav-p1" onclick="switchPage('p1')"><span class="tab-num">01</span><span class="tab-label">Hard Skills</span></button>
+  <button class="pnav-btn" id="nav-p2" onclick="switchPage('p2')"><span class="tab-num">02</span><span class="tab-label">Soft Skills</span></button>
+  <button class="pnav-btn" id="nav-p3" onclick="switchPage('p3')"><span class="tab-num">03</span><span class="tab-label">Clinical Rotations</span></button>
+  <button class="pnav-btn" id="nav-p4" onclick="switchPage('p4')"><span class="tab-num">04</span><span class="tab-label">Combined Insights</span></button>
+</nav>
+
+<!-- ══════════════════════════════════════════════════
+     PAGE 1 · HARD SKILLS
+══════════════════════════════════════════════════ -->
+<div class="page-panel active" id="panel-p1">
+  <div class="sec-hdr s1">
+    <div>
+      <div class="sec-hdr-title">Hard Skills — Academic Evaluation</div>
+      <div class="sec-hdr-desc">NCLEX pass rates (Georgia RN program data, matched to Emory hire schools) · Mean GPA from Vizient hire records · Year-over-year trends 2022–2025 · State benchmark: 80%</div>
+    </div>
+  </div>
+
+  <!-- Bubble chart full width -->
+  <div class="chart-card mb">
+    <div class="ct">Pass Rate &amp; GPA by School</div>
+    <div class="cs">Top 20 GA programs by 4-year avg NCLEX pass rate · Bubble size = total exams delivered · Color = program type</div>
+    <div class="legend" id="bubbleLegend"></div>
+    <div class="cw" style="height:360px"><canvas id="bubbleChart" role="img" aria-label="Bubble chart: GPA vs NCLEX pass rate for top 20 programs.">GPA on x-axis, NCLEX pass rate on y-axis, bubble size proportional to total exams.</canvas></div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="ct">Pass Rate Trend · 2022–2025</div>
+      <div class="cs">Click a row in the table below to highlight a school · GA state minimum: 80%</div>
+      <div class="cw" style="height:260px"><canvas id="trendChart" role="img" aria-label="Line chart of NCLEX pass rate trends 2022-2025."></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="ct">GPA Distribution</div>
+      <div class="cs">Average GPA by school (top 16, descending) · Color: ≥3.6 green · ≥3.4 amber · below blue</div>
+      <div class="cw" style="height:260px"><canvas id="gpaChart" role="img" aria-label="Horizontal bar chart of average GPA by school."></canvas></div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="ct" style="margin-bottom:4px">Academic Performance — All Schools</div>
+    <div class="cs">Click row to highlight in trend chart · Sorted by composite z-score (GPA + NCLEX)</div>
+    <table>
+      <thead><tr><th>#</th><th>School</th><th>GPA</th><th>NCLEX Avg</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th><th>Composite Score</th><th>Tier</th></tr></thead>
+      <tbody id="academicTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     PAGE 2 · SOFT SKILLS
+══════════════════════════════════════════════════ -->
+<div class="page-panel" id="panel-p2">
+  <div class="sec-hdr s2">
+    <div>
+      <div class="sec-hdr-title">Soft Skills — Commitment Evaluation</div>
+      <div class="sec-hdr-desc">Vizient retention rate (hires still employed) · Mean rotation hours per person · Hardcoded composite soft-skills z-score ranking</div>
+    </div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="ct">Retention rate</div>
+      <div class="cs">Same schools as the soft-skills score table · Higher retention indicates stronger employment commitment</div>
+      <div class="legend" style="margin-bottom:10px">
+          <div class="li"><div class="ld" style="background:#10b981"></div><span>Tier 1</span></div>
+          <div class="li"><div class="ld" style="background:#f59e0b"></div><span>Tier 2</span></div>
+          <div class="li"><div class="ld" style="background:#ef4444"></div><span>Unpartnered</span></div>
+      </div>
+      <div class="cw" style="height:380px"><canvas id="retentionChart" role="img" aria-label="Horizontal bar chart of retention rate by school."></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="ct">Mean hours per person</div>
+      <div class="cs">Mean clinical rotation hours per person · Colors: ≥70h green · ≥55h amber · below red</div>
+      <div class="legend" style="margin-bottom:10px">
+        <div class="li"><div class="ld" style="background:#10b981"></div><span>Tier 1</span></div>
+        <div class="li"><div class="ld" style="background:#f59e0b"></div><span>Tier 2</span></div>
+        <div class="li"><div class="ld" style="background:#ef4444"></div><span>Unpartnered</span></div>
+      </div>
+      <div class="cw" style="height:420px"><canvas id="rotationChart" role="img" aria-label="Horizontal bar chart of mean rotation hours per person by school."></canvas></div>
+    </div>
+  </div>
+
+  <div class="table-card" style="margin-top:8px">
+    <div class="ct" style="margin-bottom:4px">Soft Skills Final Ranking</div>
+    <div class="cs">Composite score = average of rotation-hours z-score and retention-rate z-score · Values are hardcoded directly in this HTML</div>
+    <table>
+      <thead><tr><th>Rank</th><th>School</th><th>Final Score</th><th>Avg Hr / Person</th><th>Retention Rate</th><th>Hours Z</th><th>Retention Z</th><th>Tier</th></tr></thead>
+      <tbody id="softSkillsRankTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     PAGE 3 · CLINICAL ROTATIONS
+══════════════════════════════════════════════════ -->
+<div class="page-panel" id="panel-p3">
+  <div class="sec-hdr s3">
+    <div>
+      <div class="sec-hdr-title">Clinical Rotations &amp; Workforce</div>
+      <div class="sec-hdr-desc">Hiring volume · Clinical unit placement · Average tenure · Termination analytics · Year-by-year hiring trends · Measures real-world contribution to Emory Healthcare staffing</div>
+    </div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="ct">Nurses Hired by School</div>
+      <div class="cs">Total nurses from each school entering Emory system · Top 12 shown</div>
+      <div class="cw" style="height:340px"><canvas id="nursesChart" role="img" aria-label="Horizontal bar chart of nurses hired by school."></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="ct">Average Tenure by School</div>
+      <div class="cs">Years employed at Emory Healthcare · Schools with ≥5 nurses shown</div>
+      <div class="cw" style="height:340px"><canvas id="tenureChart" role="img" aria-label="Horizontal bar chart of average tenure by school."></canvas></div>
+    </div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="ct">Top Termination Reasons</div>
+      <div class="cs">Why nurses leave Emory Healthcare (all schools combined)</div>
+      <div class="cw" style="height:280px"><canvas id="termChart" role="img" aria-label="Doughnut chart of termination reasons."></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="ct">Nurses Hired per Year</div>
+      <div class="cs">Volume trend by school · Schools with ≥20 total nurses</div>
+      <div class="cw" style="height:280px"><canvas id="hiresYearChart" role="img" aria-label="Grouped bar chart of annual hires by school."></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-card mb">
+    <div class="ct">Top Clinical Unit Placement per School</div>
+    <div class="cs">Most common unit placement for nurses from each school (Vizient data)</div>
+    <div id="unitGrid" class="unit-grid"></div>
+  </div>
+
+  <div class="table-card">
+    <div class="ct" style="margin-bottom:4px">Workforce Summary — All Schools</div>
+    <div class="cs">Sorted by total nurses hired</div>
+    <table>
+      <thead><tr><th>School</th><th>Nurses Hired</th><th>Avg Tenure</th><th>Retention</th><th>Top Unit</th><th>Top Leave Reason</th></tr></thead>
+      <tbody id="workforceTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     PAGE 4 · COMBINED INSIGHTS
+══════════════════════════════════════════════════ -->
+<div class="page-panel" id="panel-p4">
+  <div class="sec-hdr s4">
+    <div>
+      <div class="sec-hdr-title">Combined Insights &amp; Rankings</div>
+      <div class="sec-hdr-desc">Cross-section analysis · Composite z-score ranking across all dimensions · Multi-metric correlations · Overall school partner ranking</div>
+    </div>
+  </div>
+
+  <div class="ct" style="margin-bottom:4px;font-family:var(--serif);font-size:1.1rem;color:var(--text)">Top Collaborator Schools</div>
+  <div class="cs" style="margin-bottom:14px;font-size:.73rem;color:var(--muted)">Ranked by composite score: pass rate × retention × log(nurses hired)</div>
+  <div class="best-grid" id="bestGrid"></div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="ct">Pass Rate vs Retention (Bubble)</div>
+      <div class="cs">Bubble size = nurses hired · Top-right = best zone</div>
+      <div class="cw" style="height:300px"><canvas id="scatter4Chart" role="img" aria-label="Bubble scatter combined."></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="ct">Pass Rate vs Tenure</div>
+      <div class="cs">Does NCLEX quality correlate with longer employment?</div>
+      <div class="cw" style="height:300px"><canvas id="scatter2Chart" role="img" aria-label="Scatter: pass rate vs tenure."></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-card mb">
+    <div class="ct">Multi-Metric Radar — Top 6 Schools</div>
+    <div class="cs">Pass rate · Retention · Volume · Tenure · Composite score</div>
+    <div class="cw" style="height:360px"><canvas id="radarChart" role="img" aria-label="Radar chart comparing top schools across 5 dimensions."></canvas></div>
+  </div>
+
+  <div class="table-card">
+    <div class="ct" style="margin-bottom:4px">All Schools — Z-Score Ranking</div>
+    <div class="cs">Z-scores normalized across pass rate, retention, nurses hired, tenure · Higher = better relative to peer average</div>
+    <table>
+      <thead><tr><th>#</th><th>School</th><th>Nurses</th><th>Retention</th><th>Pass Rate</th><th>Tenure</th><th>Top Unit</th><th>Z-Score</th><th>Rating</th><th>Tier</th></tr></thead>
+      <tbody id="zTable"></tbody>
+    </table>
+  </div>
+</div>
+
+
+</div><!-- /container -->
+
+<script>
+/* ══════════════════════════════════════════════════
+   DATA
+══════════════════════════════════════════════════ */
+const summaryData = [
+  {school:"albany state university",      nurses:8,   gpa:null, tenure:1.08, termReason:"Obtained Position With A More Desirable Commute", unit:"Medical/Surgical Inpatient Unit",        retention:0.750, passRate:88.39, tier:2},
+  {school:"baylor university",            nurses:2,   gpa:null, tenure:null, termReason:"N/A",                                             unit:"Medical/Surgical ICU Inpatient Unit",    retention:1.000, passRate:null, tier:3},
+  {school:"brenau university",            nurses:61,  gpa:null, tenure:1.52, termReason:"Other/Unknown",                                  unit:"General Medical Inpatient Unit",         retention:0.754, passRate:84.37, tier:2},
+  {school:"capella university",           nurses:2,   gpa:null, tenure:null, termReason:"N/A",                                             unit:"Emergency Department",                   retention:1.000, passRate:null, tier:3},
+  {school:"columbus state university",    nurses:29,  gpa:null, tenure:1.60, termReason:"Other/Unknown",                                  unit:"General Medical Inpatient Unit",         retention:0.724, passRate:93.89, tier:3},
+  {school:"duke university",              nurses:2,   gpa:null, tenure:2.02, termReason:"Other/Unknown",                                  unit:"Emergency Department",                   retention:0.500, passRate:null, tier:3},
+  {school:"emory university",             nurses:375, gpa:null, tenure:1.64, termReason:"Relocating Out Of Area",                         unit:"Oncology Inpatient Unit",                retention:0.776, passRate:90.84, tier:1},
+  {school:"georgia college and state university", nurses:12, gpa:null, tenure:null, termReason:"N/A",                                     unit:"Other",                                  retention:1.000, passRate:92.32, tier:1},
+  {school:"georgia gwinnett college",     nurses:36,  gpa:null, tenure:1.67, termReason:"Other/Unknown",                                  unit:"Emergency Department",                   retention:0.722, passRate:93.66, tier:1},
+  {school:"georgia state university",     nurses:171, gpa:null, tenure:1.94, termReason:"Other/Unknown",                                  unit:"Medical/Surgical Inpatient Unit",        retention:0.725, passRate:87.29, tier:1},
+  {school:"gordon state college",         nurses:5,   gpa:null, tenure:1.68, termReason:"Other/Unknown",                                  unit:"Medical/Surgical ICU Inpatient Unit",    retention:0.600, passRate:84.27, tier:3},
+  {school:"herzing university",           nurses:36,  gpa:null, tenure:1.57, termReason:"Compensation/Pay",                               unit:"General Medical Inpatient Unit",         retention:0.694, passRate:71.80, tier:3},
+  {school:"kennesaw state university",    nurses:162, gpa:null, tenure:1.71, termReason:"Other/Unknown",                                  unit:"Cardiac/Heart/Vascular Critical Care",   retention:0.710, passRate:91.19, tier:1},
+  {school:"mercer university",            nurses:145, gpa:null, tenure:1.71, termReason:"Other/Unknown",                                  unit:"Emergency Department",                   retention:0.579, passRate:null, tier:1},
+  {school:"reinhardt university",         nurses:5,   gpa:null, tenure:2.11, termReason:"Other/Unknown",                                  unit:"General Medical Inpatient Unit",         retention:0.400, passRate:94.65, tier:3},
+  {school:"university of cincinnati",     nurses:1,   gpa:null, tenure:null, termReason:"N/A",                                             unit:"Other",                                  retention:1.000, passRate:null, tier:3},
+  {school:"university of north georgia",  nurses:84,  gpa:null, tenure:1.71, termReason:"Other/Unknown",                                  unit:"General Medical Inpatient Unit",         retention:0.619, passRate:93.18, tier:1},
+  {school:"university of pittsburgh",     nurses:6,   gpa:null, tenure:1.30, termReason:"Other/Unknown",                                  unit:"Cardiac/Heart/Vascular Critical Care",   retention:0.833, passRate:null, tier:3},
+  {school:"university of south carolina", nurses:33,  gpa:null, tenure:2.01, termReason:"Relocating Out Of Area",                         unit:"Neurology/Neurosurgical ICU",            retention:0.545, passRate:null, tier:3},
+  {school:"university of tennessee",      nurses:6,   gpa:null, tenure:1.29, termReason:"Other/Unknown",                                  unit:"Obstetrics/Labor & Delivery",            retention:0.667, passRate:null, tier:3},
+  {school:"university of west georgia",   nurses:97,  gpa:null, tenure:1.73, termReason:"Other/Unknown",                                  unit:"General Medical Inpatient Unit",         retention:0.773, passRate:83.10, tier:2},
+  {school:"western governor's university",nurses:1,   gpa:null, tenure:null, termReason:"N/A",                                             unit:"Medical/Surgical Intermediate Unit",     retention:1.000, passRate:null, tier:3},
+  {school:"xavier university",            nurses:2,   gpa:null, tenure:1.17, termReason:"Relocating Out Of Area",                         unit:"General Medical Inpatient Unit",         retention:0.500, passRate:null, tier:3},
+];
+
+const byYearData = [
+  {school:"albany state university",year:2022,nurses:1,retention:0.000,passRate:78.57,delivered:14},
+  {school:"albany state university",year:2024,nurses:3,retention:0.667,passRate:91.67,delivered:12},
+  {school:"albany state university",year:2025,nurses:1,retention:1.000,passRate:83.33,delivered:6},
+  {school:"brenau university",year:2022,nurses:14,retention:0.786,passRate:85.25,delivered:122},
+  {school:"brenau university",year:2023,nurses:14,retention:0.786,passRate:77.92,delivered:77},
+  {school:"brenau university",year:2024,nurses:21,retention:0.762,passRate:85.42,delivered:41},
+  {school:"brenau university",year:2025,nurses:12,retention:0.667,passRate:88.89,delivered:36},
+  {school:"columbus state university",year:2022,nurses:5,retention:0.800,passRate:93.55,delivered:31},
+  {school:"columbus state university",year:2023,nurses:8,retention:0.750,passRate:93.94,delivered:33},
+  {school:"columbus state university",year:2024,nurses:10,retention:0.700,passRate:97.06,delivered:34},
+  {school:"columbus state university",year:2025,nurses:6,retention:0.667,passRate:91.11,delivered:45},
+  {school:"emory university",year:2022,nurses:86,retention:0.756,passRate:88.25,delivered:408},
+  {school:"emory university",year:2023,nurses:109,retention:0.798,passRate:90.67,delivered:358},
+  {school:"emory university",year:2024,nurses:110,retention:0.773,passRate:92.09,delivered:318},
+  {school:"emory university",year:2025,nurses:70,retention:0.757,passRate:92.37,delivered:290},
+  {school:"georgia college and state university",year:2022,nurses:2,retention:1.000,passRate:94.44,delivered:18},
+  {school:"georgia college and state university",year:2023,nurses:4,retention:1.000,passRate:92.31,delivered:13},
+  {school:"georgia college and state university",year:2024,nurses:5,retention:1.000,passRate:93.33,delivered:15},
+  {school:"georgia college and state university",year:2025,nurses:1,retention:1.000,passRate:89.47,delivered:19},
+  {school:"georgia gwinnett college",year:2022,nurses:8,retention:0.625,passRate:86.36,delivered:22},
+  {school:"georgia gwinnett college",year:2023,nurses:12,retention:0.833,passRate:96.30,delivered:27},
+  {school:"georgia gwinnett college",year:2024,nurses:10,retention:0.700,passRate:96.43,delivered:28},
+  {school:"georgia gwinnett college",year:2025,nurses:6,retention:0.667,passRate:95.56,delivered:45},
+  {school:"georgia state university",year:2022,nurses:44,retention:0.682,passRate:82.78,delivered:239},
+  {school:"georgia state university",year:2023,nurses:52,retention:0.731,passRate:88.26,delivered:207},
+  {school:"georgia state university",year:2024,nurses:47,retention:0.766,passRate:89.66,delivered:87},
+  {school:"georgia state university",year:2025,nurses:28,retention:0.714,passRate:88.46,delivered:52},
+  {school:"herzing university",year:2022,nurses:9,retention:0.667,passRate:62.50,delivered:16},
+  {school:"herzing university",year:2023,nurses:11,retention:0.727,passRate:71.43,delivered:21},
+  {school:"herzing university",year:2024,nurses:10,retention:0.700,passRate:76.92,delivered:26},
+  {school:"herzing university",year:2025,nurses:6,retention:0.667,passRate:76.47,delivered:34},
+  {school:"kennesaw state university",year:2022,nurses:38,retention:0.684,passRate:88.05,delivered:159},
+  {school:"kennesaw state university",year:2023,nurses:46,retention:0.717,passRate:90.67,delivered:150},
+  {school:"kennesaw state university",year:2024,nurses:46,retention:0.717,passRate:93.48,delivered:92},
+  {school:"kennesaw state university",year:2025,nurses:32,retention:0.719,passRate:92.68,delivered:82},
+  {school:"university of north georgia",year:2022,nurses:23,retention:0.609,passRate:90.91,delivered:44},
+  {school:"university of north georgia",year:2023,nurses:25,retention:0.640,passRate:91.67,delivered:48},
+  {school:"university of north georgia",year:2024,nurses:21,retention:0.619,passRate:96.30,delivered:54},
+  {school:"university of north georgia",year:2025,nurses:15,retention:0.600,passRate:93.75,delivered:48},
+  {school:"university of west georgia",year:2022,nurses:22,retention:0.773,passRate:79.55,delivered:44},
+  {school:"university of west georgia",year:2023,nurses:27,retention:0.778,passRate:82.81,delivered:64},
+  {school:"university of west georgia",year:2024,nurses:29,retention:0.793,passRate:86.11,delivered:72},
+  {school:"university of west georgia",year:2025,nurses:19,retention:0.737,passRate:83.94,delivered:109},
+];
+
+const termReasons = [
+  {reason:"Other/Unknown",count:147},
+  {reason:"Relocating Out Of Area",count:88},
+  {reason:"Different Job Experience",count:55},
+  {reason:"Unhappy With Job/Facility",count:36},
+  {reason:"Travel Nurse",count:31},
+  {reason:"Family Obligations",count:26},
+  {reason:"Unsatisfactory Performance",count:25},
+  {reason:"Returning To School",count:21},
+  {reason:"Compensation/Pay",count:15},
+  {reason:"Did Not Return From Leave",count:14},
+];
+
+// Hard skills (GA NCLEX state data)
+const nclexState = [
+  {name:'Abraham Baldwin',type:'Associates',y22:78.15,y23:82.35,y24:97.62,y25:100,  total:401, avg:88.53},
+  {name:'Albany State',   type:'Associates',y22:72.53,y23:86.39,y24:95.65,y25:86.13,total:581, avg:83.82},
+  {name:'Albany State',   type:'Bachelors', y22:78.57,y23:100,  y24:91.67,y25:83.33,total:48,  avg:89.58},
+  {name:'Albany Technical',type:'Associates',y22:81.82,y23:100, y24:100,  y25:96.67,total:88,  avg:94.32},
+  {name:'Athens Technical',type:'Associates',y22:90,  y23:100,  y24:100,  y25:94.44,total:191, avg:96.34},
+  {name:'Atlanta Technical',type:'Associates',y22:80,  y23:100,  y24:100,  y25:100,  total:59,  avg:96.61},
+  {name:'Augusta University',type:'Bachelors',y22:79.52,y23:96.45,y24:93.83,y25:90.18,total:660,avg:90.00},
+  {name:'Augusta University',type:'Masters',  y22:84.09,y23:87.59,y24:94.12,y25:90.55,total:540,avg:92.41},
+  {name:'Berry College',  type:'Bachelors', y22:78.13,y23:100,  y24:100,  y25:100,  total:116, avg:93.97},
+  {name:'Brenau University',type:'Bachelors',y22:85.25,y23:77.92,y24:85.42,y25:88.89,total:276,avg:88.41},
+  {name:'Brenau University',type:'Masters',  y22:null, y23:100,  y24:98.57,y25:87.65,total:202, avg:94.55},
+  {name:'Chattahoochee Tech',type:'Associates',y22:100,y23:95.12,y24:100,  y25:100,  total:160, avg:98.75},
+  {name:'Chamberlain Univ.',type:'Bachelors',y22:79.51,y23:79.58,y24:77.92,y25:79.76,total:1487,avg:79.15},
+  {name:'Clayton State',  type:'Bachelors', y22:80.25,y23:88.16,y24:94.29,y25:95.12,total:233, avg:87.55},
+  {name:'Columbus State', type:'Bachelors', y22:87.18,y23:96.67,y24:95.95,y25:95.74,total:220, avg:94.55},
+  {name:'Emory University',type:'Bachelors',y22:85.94,y23:94.04,y24:94.23,y25:89.13,total:683, avg:90.48},
+  {name:'Emory University',type:'Masters',  y22:84.21,y23:89.94,y24:90.12,y25:78.27,total:1250,avg:85.76},
+  {name:'GA Baptist/Mercer',type:'Bachelors',y22:81.31,y23:90.64,y24:95.65,y25:90.08,total:661,avg:88.96},
+  {name:'GA College & State',type:'Bachelors',y22:88.99,y23:94.81,y24:91.55,y25:93.94,total:518,avg:92.47},
+  {name:'Georgia Gwinnett',type:'Bachelors',y22:94.74,y23:96.3, y24:100,  y25:83.58,total:241, avg:93.36},
+  {name:'Georgia Highlands',type:'Associates',y22:85.06,y23:96.34,y24:96,  y25:90.99,total:380, avg:92.11},
+  {name:'Georgia Northwestern',type:'Associates',y22:86.36,y23:100,y24:100,y25:100,  total:64,  avg:95.31},
+  {name:'Georgia Southern',type:'Bachelors', y22:80.99,y23:88.79,y24:92.94,y25:85.62,total:1237,avg:87.31},
+  {name:'Georgia State',  type:'Associates',y22:95.92,y23:98.89,y24:100,  y25:96.67,total:356,  avg:97.75},
+  {name:'Georgia State',  type:'Bachelors', y22:83.69,y23:83.64,y24:92.25,y25:89.56,total:575,  avg:87.65},
+  {name:'Gordon State',   type:'Associates',y22:84.62,y23:88.89,y24:97.87,y25:80.43,total:177,  avg:88.14},
+  {name:'Gordon State',   type:'Bachelors', y22:84.38,y23:84.44,y24:86.05,y25:82.22,total:165,  avg:84.24},
+  {name:'Herzing University',type:'Bachelors',y22:36.36,y23:90.32,y24:80.52,y25:80,  total:176, avg:73.86},
+  {name:'Kennesaw State', type:'Bachelors', y22:88.11,y23:90.7, y24:96.55,y25:89.38,total:1250, avg:91.28},
+  {name:'Middle GA State',type:'Associates',y22:86.9, y23:94.12,y24:96,   y25:96.67,total:245,  avg:92.65},
+  {name:'Middle GA State',type:'Bachelors', y22:93.18,y23:97.52,y24:100,  y25:96.77,total:372,  avg:96.51},
+  {name:'North GA Technical',type:'Associates',y22:91.43,y23:100,y24:100,  y25:98.25,total:166, avg:97.59},
+  {name:'Reinhardt University',type:'Bachelors',y22:84,y23:94.59,y24:100,  y25:100,  total:114, avg:94.74},
+  {name:'Shorter University',type:'Bachelors',y22:89.47,y23:85.71,y24:92.31,y25:71.43,total:94, avg:85.11},
+  {name:'Southeastern Tech',type:'Associates',y22:90, y23:100,  y24:100,  y25:92.11,total:171,  avg:95.91},
+  {name:'Southern Crescent',type:'Associates',y22:86.84,y23:92.68,y24:87.5,y25:92.11,total:195, avg:90.26},
+  {name:'Univ. of North GA',type:'Bachelors',y22:87.77,y23:95.65,y24:96.74,y25:92.54,total:734, avg:93.05},
+  {name:'Univ. of West GA',type:'Bachelors', y22:71.64,y23:84.43,y24:93.01,y25:83.33,total:594, avg:83.33},
+  {name:'Valdosta State', type:'Bachelors', y22:83.72,y23:94.05,y24:94.05,y25:95.71,total:324,  avg:90.74},
+  {name:'West GA Technical',type:'Associates',y22:90.7,y23:96.88,y24:95.56,y25:94.74,total:158, avg:94.30},
+];
+
+const gpaData = [
+  {school:'Capella University',gpa:3.75},{school:'Jacksonville University',gpa:3.75},
+  {school:'Duke University',gpa:3.70},{school:'Reinhardt University',gpa:3.65},
+  {school:'Xavier University',gpa:3.625},{school:'Emory University',gpa:3.624},
+  {school:'Univ. of North Georgia',gpa:3.591},{school:'Univ. of West Georgia',gpa:3.585},
+  {school:'Kennesaw State',gpa:3.572},{school:'Georgia State University',gpa:3.571},
+  {school:'Baylor University',gpa:3.55},{school:'Univ. of South Carolina',gpa:3.536},
+  {school:'Georgia Gwinnett',gpa:3.507},{school:'Univ. of Cincinnati',gpa:3.50},
+  {school:'Mercer University',gpa:3.483},{school:'Brenau University',gpa:3.435},
+];
+
+const zScoresHard = [
+  {school:'Reinhardt University',       gpa:3.65,  nclex:94.74, score:1.12, tier:3},
+  {school:'Georgia State (Assoc.)',     gpa:3.571, nclex:97.75, score:1.07, tier:1},
+  {school:'Univ. of North Georgia',     gpa:3.591, nclex:93.05, score:0.80, tier:1},
+  {school:'Emory University (Bach.)',   gpa:3.624, nclex:90.48, score:0.73, tier:1},
+  {school:'Kennesaw State',             gpa:3.572, nclex:91.28, score:0.61, tier:1},
+  {school:'Georgia Gwinnett',           gpa:3.507, nclex:93.36, score:0.54, tier:1},
+  {school:'Emory University (Masters)', gpa:3.624, nclex:85.76, score:0.40, tier:1},
+  {school:'Brenau (Masters)',           gpa:3.435, nclex:94.55, score:0.38, tier:2},
+  {school:'Georgia State (Bach.)',      gpa:3.571, nclex:87.65, score:0.35, tier:1},
+  {school:'Univ. of West Georgia',      gpa:3.585, nclex:83.33, score:0.09, tier:2},
+  {school:'Columbus State',             gpa:3.317, nclex:94.55, score:-0.03, tier:3},
+  {school:'Brenau (Bach.)',             gpa:3.435, nclex:88.41, score:-0.06, tier:2},
+  {school:'Georgia College & State',    gpa:3.333, nclex:92.47, score:-0.12, tier:1},
+  {school:'Georgia Highlands',          gpa:3.25,  nclex:92.11, score:-0.43, tier:3},
+  {school:'Albany State',               gpa:3.25,  nclex:89.58, score:-0.60, tier:2},
+  {school:'Gordon State (Bach.)',       gpa:3.25,  nclex:88.14, score:-0.71, tier:3},
+  {school:'Atlanta Technical',          gpa:3.023, nclex:96.61, score:-0.88, tier:3},
+  {school:'Gordon State (Assoc.)',      gpa:3.25,  nclex:84.24, score:-0.98, tier:3},
+  {school:'Albany State (Assoc.)',      gpa:3.25,  nclex:83.82, score:-1.01, tier:2},
+  {school:'Herzing University',         gpa:3.381, nclex:73.86, score:-1.27, tier:3},
+];
+
+// Soft skills final scores (hardcoded directly in this HTML)
+const softSkillsScores = [
+  {
+    "school": "brenau university",
+    "avgHours": 129.8182,
+    "retention": 0.7143,
+    "hoursZ": 2.3643,
+    "retentionZ": -0.0548,
+    "score": 1.1548,
+    "tier": 2
+  },
+  {
+    "school": "chamberlain university",
+    "avgHours": 78.1382,
+    "retention": 0.6506,
+    "hoursZ": 0.2491,
+    "retentionZ": -0.6211,
+    "score": -0.186,
+    "tier": 1
+  },
+  {
+    "school": "emory university",
+    "avgHours": 59.5962,
+    "retention": 0.7293,
+    "hoursZ": -0.5098,
+    "retentionZ": 0.079,
+    "score": -0.2154,
+    "tier": 1
+  },
+  {
+    "school": "georgia gwinnett college",
+    "avgHours": 45.9535,
+    "retention": 0.7297,
+    "hoursZ": -1.0682,
+    "retentionZ": 0.0826,
+    "score": -0.4928,
+    "tier": 1
+  },
+  {
+    "school": "georgia state university",
+    "avgHours": 68.212,
+    "retention": 0.7168,
+    "hoursZ": -0.1572,
+    "retentionZ": -0.032,
+    "score": -0.0946,
+    "tier": 1
+  },
+  {
+    "school": "herzing university",
+    "avgHours": 93.4737,
+    "retention": 0.7368,
+    "hoursZ": 0.8767,
+    "retentionZ": 0.1458,
+    "score": 0.5113,
+    "tier": 3
+  },
+  {
+    "school": "kennesaw state university",
+    "avgHours": 51.4765,
+    "retention": 0.7313,
+    "hoursZ": -0.8421,
+    "retentionZ": 0.0963,
+    "score": -0.3729,
+    "tier": 1
+  },
+  {
+    "school": "mercer university",
+    "avgHours": 61.1119,
+    "retention": 0.6029,
+    "hoursZ": -0.4478,
+    "retentionZ": -1.045,
+    "score": -0.7464,
+    "tier": 1
+  },
+  {
+    "school": "south college atlanta",
+    "avgHours": 60.0,
+    "retention": 1.0,
+    "hoursZ": -0.4933,
+    "retentionZ": 2.4863,
+    "score": 0.9965,
+    "tier": 3
+  },
+  {
+    "school": "university of north georgia",
+    "avgHours": 72.7423,
+    "retention": 0.5926,
+    "hoursZ": 0.0282,
+    "retentionZ": -1.1371,
+    "score": -0.5544,
+    "tier": 1
+  }
+];
+
+
+const schoolGpaMap = {
+  'Reinhardt University':3.65,'Georgia State':3.571,'Univ. of North GA':3.591,
+  'Emory University':3.624,'Kennesaw State':3.572,'Georgia Gwinnett':3.507,
+  'Brenau University':3.435,'Univ. of West GA':3.585,'Columbus State':3.317,
+  'GA College & State':3.333,'Georgia Highlands':3.25,'Albany State':3.25,
+  'Gordon State':3.25,'Atlanta Technical':3.023,'Herzing University':3.381,
+  'Berry College':3.48,'Augusta University':3.48,'Middle GA State':3.30,
+  'Chattahoochee Tech':3.30,'North GA Technical':3.30,
+};
+
+/* ══════════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════════ */
+const palette = ['#3b82f6','#06b6d4','#10b981','#f59e0b','#a78bfa','#f87171','#34d399','#60a5fa','#fbbf24','#818cf8','#2dd4bf','#fb923c','#4ade80','#e879f9','#38bdf8'];
+function schoolColor(name){const i=summaryData.findIndex(d=>d.school===name);return palette[i%palette.length]}
+function toTitle(s){return s.replace(/\b\w/g,c=>c.toUpperCase())}
+function pct(v,d=1){return v!=null?(v*100).toFixed(d)+'%':'N/A'}
+function compositeScore(d){if(!d.passRate||!d.retention)return -1;return(d.passRate/100)*d.retention*Math.log10(Math.max(d.nurses,1)+1)}
+function zScore(v,mean,sd){return sd>0?(v-mean)/sd:0}
+function mean(arr){return arr.length?arr.reduce((a,b)=>a+b,0)/arr.length:0}
+function sd(arr){const m=mean(arr);return Math.sqrt(arr.reduce((s,v)=>s+(v-m)**2,0)/arr.length)}
+
+let charts={}, selectedSchool=null, currentPage='p1';
+
+/* ══════════════════════════════════════════════════
+   FILTERS
+══════════════════════════════════════════════════ */
+function getFiltered(){
+  const school=document.getElementById('schoolFilter').value;
+  const minN=+document.getElementById('minNurses').value;
+  const minR=+document.getElementById('minRetention').value/100;
+  const minP=+document.getElementById('minPass').value;
+  return summaryData.filter(d=>{
+    if(school!=='all'&&d.school!==school)return false;
+    if(d.nurses<minN)return false;
+    if(d.retention<minR)return false;
+    if(minP>0&&(!d.passRate||d.passRate<minP))return false;
+    return true;
+  });
+}
+
+function resetFilters(){
+  document.getElementById('schoolFilter').value='all';
+  document.getElementById('minNurses').value=1;   document.getElementById('minNursesVal').textContent='1';
+  document.getElementById('minRetention').value=0; document.getElementById('minRetVal').textContent='0';
+  document.getElementById('minPass').value=0;     document.getElementById('minPassVal').textContent='0';
+  selectedSchool=null; render();
+}
+
+/* ══════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════ */
+function init(){
+  const sel=document.getElementById('schoolFilter');
+  [...summaryData].sort((a,b)=>b.nurses-a.nurses).forEach(d=>{
+    const o=document.createElement('option');
+    o.value=d.school; o.textContent=toTitle(d.school);
+    sel.appendChild(o);
+  });
+  document.getElementById('schoolFilter').addEventListener('change',render);
+  document.getElementById('minNurses').addEventListener('input',e=>{document.getElementById('minNursesVal').textContent=e.target.value;render()});
+  document.getElementById('minRetention').addEventListener('input',e=>{document.getElementById('minRetVal').textContent=e.target.value;render()});
+  document.getElementById('minPass').addEventListener('input',e=>{document.getElementById('minPassVal').textContent=e.target.value;render()});
+  render();
+}
+
+/* ══════════════════════════════════════════════════
+   PAGE SWITCH
+══════════════════════════════════════════════════ */
+function switchPage(id){
+  document.querySelectorAll('.page-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.pnav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  document.getElementById('nav-'+id).classList.add('active');
+  currentPage=id;
+  render();
+}
+
+/* ══════════════════════════════════════════════════
+   RENDER
+══════════════════════════════════════════════════ */
+function render(){
+  const f=getFiltered();
+  updateKPIs(f);
+  if(currentPage==='p1')renderHardSkills(f);
+  if(currentPage==='p2')renderSoftSkills(f);
+  if(currentPage==='p3')renderWorkforce(f);
+  if(currentPage==='p4')renderCombined(f);
+}
+
+function updateKPIs(data){
+  document.getElementById('kpiSchools').textContent=data.length;
+  const wp=data.filter(d=>d.passRate);
+  document.getElementById('kpiPass').textContent=wp.length?(wp.reduce((s,d)=>s+d.passRate,0)/wp.length).toFixed(1)+'%':'N/A';
+  document.getElementById('kpiRet').textContent=data.length?pct(data.reduce((s,d)=>s+d.retention,0)/data.length):'N/A';
+  document.getElementById('kpiNurses').textContent=data.reduce((s,d)=>s+d.nurses,0).toLocaleString();
+}
+
+function dc(id){if(charts[id]){charts[id].destroy();delete charts[id]}}
+const TT={backgroundColor:'#ffffff',borderColor:'#e2e8f0',borderWidth:1,titleColor:'#0f172a',bodyColor:'#334155',padding:11};
+
+/* ══════════════════════════════════════════════════
+   PAGE 1 · HARD SKILLS
+══════════════════════════════════════════════════ */
+function renderHardSkills(filtered){
+  // Bubble chart
+  dc('bubble');
+  const typeColors={Associates:'#378ADD',Bachelors:'#1D9E75',Masters:'#D85A30'};
+  const typeLabels={Associates:'Associates',Bachelors:'Bachelors',Masters:'Masters/Pre-Lic.'};
+  document.getElementById('bubbleLegend').innerHTML=Object.entries(typeColors).map(([k,c])=>`<span class="li"><span class="ld" style="background:${c}"></span>${typeLabels[k]}</span>`).join('');
+  const top20=[...nclexState].sort((a,b)=>b.avg-a.avg).slice(0,20);
+  const bData=top20.map(s=>({x:schoolGpaMap[s.name]||3.35,y:s.avg,r:Math.sqrt(s.total)/2.8,label:s.name,type:s.type}));
+  charts['bubble']=new Chart(document.getElementById('bubbleChart'),{
+    type:'bubble',
+    data:{datasets:['Associates','Bachelors','Masters'].map(t=>({
+      label:typeLabels[t],data:bData.filter(d=>d.type===t),
+      backgroundColor:typeColors[t]+'99',borderColor:typeColors[t],borderWidth:1.5,
+    }))},
+    options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:20,right:20,bottom:10,left:10}},
+      plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:c=>{const d=c.raw;return[`${d.label} (${c.dataset.label})`,`GPA: ${d.x.toFixed(2)}`,`Pass rate: ${d.y.toFixed(1)}%`]}}}},
+      scales:{
+        x:{title:{display:true,text:'Average GPA',color:'#475569',font:{size:11}},min:2.9,max:3.85,ticks:{color:'#475569',font:{size:11},callback:v=>v.toFixed(2)},grid:{color:'#e2e8f0'}},
+        y:{title:{display:true,text:'NCLEX Pass Rate (%)',color:'#475569',font:{size:11}},min:70,max:105,ticks:{color:'#475569',font:{size:11},callback:v=>v+'%'},grid:{color:'#e2e8f0'}}
+      }}
+  });
+
+  // Trend chart
+  dc('trend1');
+  const schoolsShow=selectedSchool?[selectedSchool]:filtered.filter(d=>d.nurses>=20).map(d=>d.school).slice(0,6);
+  const years=[2022,2023,2024,2025];
+  const trendDS=schoolsShow.map(school=>({
+    label:toTitle(school),
+    data:years.map(y=>{const r=byYearData.find(r=>r.school===school&&r.year===y);return r?r.passRate:null}),
+    borderColor:schoolColor(school),backgroundColor:schoolColor(school)+'22',
+    borderWidth:selectedSchool===school?2.5:1.5,pointRadius:4,pointHoverRadius:6,tension:.3,fill:false,spanGaps:true,
+  }));
+  trendDS.push({label:'GA Min (80%)',data:years.map(()=>80),borderColor:'#ef444455',borderDash:[6,4],borderWidth:1,pointRadius:0,fill:false});
+  charts['trend1']=new Chart(document.getElementById('trendChart'),{
+    type:'line',data:{labels:years,datasets:trendDS},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#334155',boxWidth:10,font:{size:10}}},tooltip:{...TT,callbacks:{label:c=>`${c.dataset.label}: ${c.raw?c.raw.toFixed(1)+'%':'N/A'}`}}},
+      scales:{x:{grid:{color:'#e2e8f0'},ticks:{color:'#475569'}},y:{min:60,max:100,grid:{color:'#e2e8f0'},ticks:{color:'#475569',callback:v=>v+'%'}}}}
+  });
+
+  // GPA bar
+  dc('gpa');
+  charts['gpa']=new Chart(document.getElementById('gpaChart'),{
+    type:'bar',
+    data:{labels:gpaData.map(d=>d.school.length>22?d.school.slice(0,22)+'…':d.school),
+      datasets:[{data:gpaData.map(d=>d.gpa),
+        backgroundColor:gpaData.map(d=>d.gpa>=3.6?'#1D9E7599':d.gpa>=3.4?'#BA751799':'#37439D99'),
+        borderColor:gpaData.map(d=>d.gpa>=3.6?'#1D9E75':d.gpa>=3.4?'#BA7517':'#37439D'),
+        borderWidth:1.5,borderRadius:3}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:c=>`GPA: ${c.parsed.x.toFixed(2)}`}}},
+      scales:{x:{min:2.8,max:3.85,ticks:{color:'#475569',font:{size:10},callback:v=>v.toFixed(2)},grid:{color:'#e2e8f0'}},y:{ticks:{color:'#334155',font:{size:10}},grid:{display:false}}}}
+  });
+
+  // Academic table
+  const tbody=document.getElementById('academicTable');
+  const maxN=Math.max(...filtered.map(d=>d.nurses));
+  tbody.innerHTML=zScoresHard.map((s,i)=>{
+    const barW=Math.round(((s.score+1.5)/2.8)*100);
+    const sign=s.score>0?'+':'';
+    const tier=s.tier===1?'<span class="tag tag-top">Tier 1</span>':s.tier===2?'<span class="tag tag-mid">Tier 2</span>':'<span class="tag tag-low">Unpartnered</span>';
+    const yFmt=v=>v!=null?`${v.toFixed(1)}%`:'—';
+    // match to vizient
+    const vRow=summaryData.find(d=>d.school.toLowerCase().includes(s.school.split('(')[0].trim().toLowerCase().split(' ').slice(0,2).join(' ')));
+    const yr=yFmt;
+    const yData=byYearData.filter(r=>r.school===vRow?.school);
+    const y22=yData.find(r=>r.year===2022),y23=yData.find(r=>r.year===2023),y24=yData.find(r=>r.year===2024),y25=yData.find(r=>r.year===2025);
+    return `<tr onclick="selectSchool('${vRow?.school||''}')">
+      <td style="color:var(--muted);font-size:.72rem">${i+1}</td>
+      <td class="snc">${s.school}</td>
+      <td style="font-family:var(--mono);font-size:.78rem">${s.gpa.toFixed(2)}</td>
+      <td style="color:${s.nclex>=90?'#10b981':s.nclex>=80?'#f59e0b':'#ef4444'};font-family:var(--mono);font-size:.78rem">${s.nclex.toFixed(1)}%</td>
+      <td style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">${y22?y22.passRate.toFixed(1)+'%':'—'}</td>
+      <td style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">${y23?y23.passRate.toFixed(1)+'%':'—'}</td>
+      <td style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">${y24?y24.passRate.toFixed(1)+'%':'—'}</td>
+      <td style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">${y25?y25.passRate.toFixed(1)+'%':'—'}</td>
+      <td>
+        <div class="sb-wrap">
+          <div class="sb-bg"><div class="sb-fill" style="width:${Math.max(4,barW)}%;background:${s.score>0?'#10b981':'#ef4444'}"></div></div>
+          <span style="font-family:var(--mono);font-size:.72rem;min-width:36px;color:${s.score>0?'#10b981':'#ef4444'}">${sign}${s.score.toFixed(2)}</span>
+        </div>
+      </td>
+      <td>${tier}</td>
+    </tr>`;
+  }).join('');
+}
+
+function selectSchool(school){selectedSchool=selectedSchool===school?null:school;render()}
+
+/* ══════════════════════════════════════════════════
+   PAGE 2 · SOFT SKILLS
+══════════════════════════════════════════════════ */
+function renderSoftSkills(filtered){
+  // Soft Skills uses its own hardcoded dataset, not summaryData.
+  // This keeps the soft-skills section independent from the hard-skills/main dashboard data.
+  const data = [...softSkillsScores].sort((a,b)=>b.score-a.score);
+
+  const chartData = [...data].sort((a,b)=>b.retention-a.retention);
+
+  dc('retention');
+  charts['retention']=new Chart(document.getElementById('retentionChart'),{
+    type:'bar',
+    data:{labels:chartData.map(d=>toTitle(d.school).replace('University','Univ.').replace('College','Col.')),
+      datasets:[{data:chartData.map(d=>+(d.retention*100).toFixed(1)),
+        backgroundColor:chartData.map(d=>d.tier===1?'#10b981cc':d.tier===2?'#f59e0bcc':'#ef4444cc'),
+        borderColor:chartData.map(d=>d.tier===1?'#10b981':d.tier===2?'#f59e0b':'#ef4444'),
+        borderWidth:1,borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:c=>`Retention: ${c.raw}%`}}},
+      scales:{x:{min:0,max:100,grid:{color:'#e2e8f0'},ticks:{color:'#475569',callback:v=>v+'%'}},y:{grid:{display:false},ticks:{color:'#334155',font:{size:10}}}}}
+  });
+
+  dc('rotation');
+  const hoursData = [...softSkillsScores].sort((a,b)=>b.avgHours-a.avgHours);
+  const tierBg = d => d.tier===3?'#ef4444cc':d.tier===2?'#f59e0bcc':'#10b981cc';
+  const tierBorder = d => d.tier===3?'#ef4444':d.tier===2?'#f59e0b':'#10b981';
+  charts['rotation']=new Chart(document.getElementById('rotationChart'),{
+    type:'bar',
+    data:{labels:hoursData.map(d=>toTitle(d.school).replace('University','Univ.').replace('College','Col.')),
+      datasets:[{data:hoursData.map(d=>+d.avgHours.toFixed(1)),
+        backgroundColor:hoursData.map(tierBg),
+        borderColor:hoursData.map(tierBorder),
+        borderWidth:1,borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:c=>{const d=hoursData[c.dataIndex];return [`Avg hours/person: ${c.raw}`,`Tier: ${d.tier}`]}}}},
+      scales:{x:{min:0,grid:{color:'#e2e8f0'},ticks:{color:'#475569',callback:v=>v+'h'}},y:{grid:{display:false},ticks:{color:'#334155',font:{size:10}}}}}
+  });
+
+  const tbody=document.getElementById('softSkillsRankTable');
+  tbody.innerHTML=data.map((d,i)=>{
+    const scoreColor=d.score>=0.5?'#10b981':d.score>=-0.3?'#f59e0b':'#ef4444';
+    const tier=d.tier===3?'<span class="tag tag-low">Unpartnered</span>':d.tier===2?'<span class="tag tag-mid">Tier 2</span>':'<span class="tag tag-top">Tier 1</span>';
+    const sign=d.score>0?'+':'';
+    return `<tr>
+      <td style="color:var(--muted);font-size:.72rem">${i+1}</td>
+      <td class="snc">${toTitle(d.school)}</td>
+      <td style="color:${scoreColor};font-family:var(--mono);font-size:.78rem">${sign}${d.score.toFixed(3)}</td>
+      <td style="font-family:var(--mono);font-size:.78rem">${d.avgHours.toFixed(1)}</td>
+      <td style="font-family:var(--mono);font-size:.78rem">${(d.retention*100).toFixed(1)}%</td>
+      <td style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">${d.hoursZ.toFixed(3)}</td>
+      <td style="font-family:var(--mono);font-size:.75rem;color:var(--muted)">${d.retentionZ.toFixed(3)}</td>
+      <td>${tier}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════
+   PAGE 3 · WORKFORCE
+══════════════════════════════════════════════════ */
+function renderWorkforce(filtered){
+  // Nurses bar
+  dc('nurses');
+  const nSorted=[...filtered].filter(d=>d.nurses>=5).sort((a,b)=>b.nurses-a.nurses).slice(0,12);
+  charts['nurses']=new Chart(document.getElementById('nursesChart'),{
+    type:'bar',
+    data:{labels:nSorted.map(d=>toTitle(d.school).replace('University','Univ.').replace('College','Col.')),
+      datasets:[{data:nSorted.map(d=>d.nurses),
+        backgroundColor:nSorted.map(d=>schoolColor(d.school)+'bb'),
+        borderColor:nSorted.map(d=>schoolColor(d.school)),
+        borderWidth:1,borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:c=>`Nurses hired: ${c.raw}`}}},
+      scales:{x:{grid:{color:'#e2e8f0'},ticks:{color:'#475569'}},y:{grid:{display:false},ticks:{color:'#334155',font:{size:10}}}}}
+  });
+
+  // Tenure bar
+  dc('tenure');
+  const tSorted=[...filtered].filter(d=>d.nurses>=5&&d.tenure).sort((a,b)=>b.tenure-a.tenure);
+  charts['tenure']=new Chart(document.getElementById('tenureChart'),{
+    type:'bar',
+    data:{labels:tSorted.map(d=>toTitle(d.school).replace('University','Univ.').replace('College','Col.')),
+      datasets:[{data:tSorted.map(d=>+d.tenure.toFixed(2)),
+        backgroundColor:tSorted.map(d=>d.tenure>=2?'#3b82f6bb':d.tenure>=1.5?'#06b6d4bb':'#a78bfabb'),
+        borderColor:tSorted.map(d=>d.tenure>=2?'#3b82f6':d.tenure>=1.5?'#06b6d4':'#a78bfa'),
+        borderWidth:1,borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:c=>`Avg tenure: ${c.raw} yrs`}}},
+      scales:{x:{min:0,max:3,grid:{color:'#e2e8f0'},ticks:{color:'#475569',callback:v=>v+'yr'}},y:{grid:{display:false},ticks:{color:'#334155',font:{size:10}}}}}
+  });
+
+  // Term reasons doughnut
+  dc('term');
+  charts['term']=new Chart(document.getElementById('termChart'),{
+    type:'doughnut',
+    data:{labels:termReasons.map(d=>d.reason),
+      datasets:[{data:termReasons.map(d=>d.count),
+        backgroundColor:palette.slice(0,termReasons.length).map(c=>c+'cc'),
+        borderColor:palette.slice(0,termReasons.length),borderWidth:1}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'right',labels:{color:'#334155',boxWidth:9,font:{size:9.5},padding:7}},
+        tooltip:{...TT,callbacks:{label:c=>`${c.label}: ${c.raw} nurses`}}}}
+  });
+
+  // Hires per year
+  dc('hiresYear');
+  const bigSchools=filtered.filter(d=>d.nurses>=20).map(d=>d.school).slice(0,6);
+  const years=[2022,2023,2024,2025];
+  charts['hiresYear']=new Chart(document.getElementById('hiresYearChart'),{
+    type:'bar',
+    data:{labels:years,datasets:bigSchools.map((school,i)=>({
+      label:toTitle(school).split(' ')[0],
+      data:years.map(y=>{const r=byYearData.find(r=>r.school===school&&r.year===y);return r?r.nurses:0}),
+      backgroundColor:palette[i%palette.length]+'99',borderColor:palette[i%palette.length],borderWidth:1,borderRadius:3,
+    }))},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#334155',boxWidth:9,font:{size:10}}},tooltip:{...TT}},
+      scales:{x:{grid:{color:'#e2e8f0'},ticks:{color:'#475569'}},y:{grid:{color:'#e2e8f0'},ticks:{color:'#475569'}}}}
+  });
+
+  // Unit grid
+  document.getElementById('unitGrid').innerHTML=filtered.filter(d=>d.unit&&d.unit!=='Other').sort((a,b)=>b.nurses-a.nurses).slice(0,18).map(d=>`
+    <div class="unit-item">
+      <div class="unit-school">${toTitle(d.school).replace('University','Univ.')}</div>
+      <div class="unit-name">${d.unit}</div>
+    </div>`).join('');
+
+  // Workforce table
+  document.getElementById('workforceTable').innerHTML=[...filtered].sort((a,b)=>b.nurses-a.nurses).map(d=>`
+    <tr>
+      <td class="snc">${toTitle(d.school)}</td>
+      <td style="font-family:var(--mono)">${d.nurses}</td>
+      <td style="font-family:var(--mono);color:var(--muted)">${d.tenure?d.tenure.toFixed(2)+' yrs':'—'}</td>
+      <td style="color:${d.retention>=.75?'#10b981':d.retention>=.65?'#f59e0b':'#ef4444'};font-family:var(--mono)">${pct(d.retention)}</td>
+      <td style="font-size:.75rem;color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${d.unit}">${d.unit}</td>
+      <td style="font-size:.72rem;color:var(--muted)">${d.termReason==='N/A'?'—':d.termReason}</td>
+    </tr>`).join('');
+}
+
+/* ══════════════════════════════════════════════════
+   PAGE 4 · COMBINED
+══════════════════════════════════════════════════ */
+function renderCombined(filtered){
+  // Best cards
+  const scored=[...filtered].filter(d=>d.passRate&&d.nurses>=5)
+    .map(d=>({...d,score:compositeScore(d)})).sort((a,b)=>b.score-a.score).slice(0,3);
+  document.getElementById('bestGrid').innerHTML=scored.map((d,i)=>`
+    <div class="best-card">
+      <div class="best-rank">${i+1}</div>
+      <div class="best-school">${toTitle(d.school)}</div>
+      <div class="bm"><span class="bml">PASS RATE</span><span class="bmv" style="color:var(--accent)">${d.passRate.toFixed(1)}%</span></div>
+      <div class="bm"><span class="bml">RETENTION</span><span class="bmv" style="color:var(--green)">${pct(d.retention)}</span></div>
+      <div class="bm"><span class="bml">NURSES HIRED</span><span class="bmv" style="color:var(--gold)">${d.nurses}</span></div>
+      <div class="bm"><span class="bml">AVG TENURE</span><span class="bmv" style="color:var(--muted)">${d.tenure?d.tenure.toFixed(2)+' yrs':'N/A'}</span></div>
+    </div>`).join('');
+
+  // Bubble scatter
+  dc('scatter4');
+  const withBoth=filtered.filter(d=>d.passRate&&d.nurses>=3);
+  const maxN4=Math.max(...withBoth.map(d=>d.nurses));
+  charts['scatter4']=new Chart(document.getElementById('scatter4Chart'),{
+    type:'bubble',
+    data:{datasets:withBoth.map(d=>({
+      label:toTitle(d.school),data:[{x:d.passRate,y:d.retention*100}],
+      backgroundColor:schoolColor(d.school)+'cc',borderColor:schoolColor(d.school),borderWidth:1.5,
+      pointRadius:Math.max(6,Math.sqrt(d.nurses/maxN4)*36),pointHoverRadius:Math.max(8,Math.sqrt(d.nurses/maxN4)*40),
+    }))},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:c=>{const d=withBoth[c.datasetIndex];return[toTitle(d.school),`Pass: ${d.passRate.toFixed(1)}%`,`Ret: ${pct(d.retention)}`,`n=${d.nurses}`]}}}},
+      scales:{x:{title:{display:true,text:'NCLEX Pass Rate (%)',color:'#475569',font:{size:11}},min:65,max:100,grid:{color:'#e2e8f0'},ticks:{color:'#475569'}},y:{title:{display:true,text:'Retention Rate (%)',color:'#475569',font:{size:11}},min:40,max:110,grid:{color:'#e2e8f0'},ticks:{color:'#475569',callback:v=>v+'%'}}}},
+    plugins:[{id:'q2',beforeDraw(chart){
+      const{ctx,chartArea,scales}=chart;if(!chartArea)return;
+      const xM=scales.x.getPixelForValue(88),yM=scales.y.getPixelForValue(70);
+      ctx.save();ctx.fillStyle='rgba(16,185,129,.04)';ctx.fillRect(xM,chartArea.top,chartArea.right-xM,yM-chartArea.top);
+      ctx.strokeStyle='rgba(100,116,139,.3)';ctx.setLineDash([4,4]);ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(xM,chartArea.top);ctx.lineTo(xM,chartArea.bottom);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(chartArea.left,yM);ctx.lineTo(chartArea.right,yM);ctx.stroke();
+      ctx.setLineDash([]);ctx.fillStyle='rgba(16,185,129,.6)';ctx.font='10px DM Mono,monospace';ctx.fillText('BEST ZONE',xM+6,chartArea.top+14);
+      ctx.restore();
+    }}]
+  });
+
+  // Pass vs Tenure scatter
+  dc('scatter2t');
+  const withTen=filtered.filter(d=>d.passRate&&d.tenure&&d.nurses>=3);
+  charts['scatter2t']=new Chart(document.getElementById('scatter2Chart'),{
+    type:'scatter',
+    data:{datasets:[{
+      data:withTen.map(d=>({x:d.passRate,y:d.tenure,label:toTitle(d.school)})),
+      backgroundColor:withTen.map(d=>schoolColor(d.school)+'cc'),
+      borderColor:withTen.map(d=>schoolColor(d.school)),
+      borderWidth:1.5,pointRadius:7,pointHoverRadius:9,
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:c=>[c.raw.label,`Pass: ${c.raw.x.toFixed(1)}%`,`Tenure: ${c.raw.y.toFixed(2)} yrs`]}}},
+      scales:{x:{title:{display:true,text:'NCLEX Pass Rate (%)',color:'#475569',font:{size:11}},min:65,max:100,grid:{color:'#e2e8f0'},ticks:{color:'#475569'}},y:{title:{display:true,text:'Avg Tenure (yrs)',color:'#475569',font:{size:11}},min:0.8,max:2.5,grid:{color:'#e2e8f0'},ticks:{color:'#475569'}}}}
+  });
+
+  // Radar
+  dc('radar');
+  const top6=[...filtered].filter(d=>d.passRate&&d.nurses>=10).map(d=>({...d,score:compositeScore(d)})).sort((a,b)=>b.score-a.score).slice(0,6);
+  const maxPR=Math.max(...top6.map(d=>d.passRate));
+  const maxRet=Math.max(...top6.map(d=>d.retention));
+  const maxN=Math.max(...top6.map(d=>d.nurses));
+  const maxTen=Math.max(...top6.filter(d=>d.tenure).map(d=>d.tenure));
+  const maxScore=Math.max(...top6.map(d=>compositeScore(d)));
+  charts['radar']=new Chart(document.getElementById('radarChart'),{
+    type:'radar',
+    data:{labels:['Pass Rate','Retention','Volume (hires)','Avg Tenure','Composite Score'],
+      datasets:top6.map((d,i)=>({
+        label:toTitle(d.school).split(' ')[0]+(toTitle(d.school).split(' ')[1]?' '+toTitle(d.school).split(' ')[1]:''),
+        data:[
+          (d.passRate/maxPR)*100,
+          (d.retention/maxRet)*100,
+          (d.nurses/maxN)*100,
+          d.tenure?((d.tenure/maxTen)*100):0,
+          (compositeScore(d)/maxScore)*100,
+        ],
+        borderColor:palette[i%palette.length],backgroundColor:palette[i%palette.length]+'22',borderWidth:1.5,pointRadius:3,
+      }))},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#334155',boxWidth:9,font:{size:10}}},tooltip:{...TT,callbacks:{label:c=>`${c.dataset.label}: ${c.raw.toFixed(1)}`}}},
+      scales:{r:{min:0,max:100,ticks:{display:false,backdropColor:'transparent'},grid:{color:'#e2e8f0'},pointLabels:{color:'#334155',font:{size:11}},angleLines:{color:'#e2e8f0'}}}}
+  });
+
+  // Z-score table
+  const retVals=filtered.filter(d=>d.passRate&&d.tenure).map(d=>d.retention);
+  const passVals=filtered.filter(d=>d.passRate&&d.tenure).map(d=>d.passRate);
+  const nVals=filtered.map(d=>d.nurses);
+  const tenVals=filtered.filter(d=>d.tenure).map(d=>d.tenure);
+  const rM=mean(retVals),rSD=sd(retVals),pM=mean(passVals),pSD=sd(passVals);
+  const nM=mean(nVals),nSD=sd(nVals),tM=mean(tenVals),tSD=sd(tenVals);
+  const zRows=[...filtered].map(d=>{
+    const zR=zScore(d.retention,rM,rSD);
+    const zP=d.passRate?zScore(d.passRate,pM,pSD):0;
+    const zN=zScore(d.nurses,nM,nSD);
+    const zT=d.tenure?zScore(d.tenure,tM,tSD):0;
+    const z=(zR+zP+zN+zT)/(d.passRate&&d.tenure?4:d.passRate||d.tenure?3:2);
+    return{...d,z};
+  }).sort((a,b)=>b.z-a.z);
+  document.getElementById('zTable').innerHTML=zRows.map((d,i)=>{
+    const bw=Math.round(((d.z+2)/4)*100);
+    const sign=d.z>0?'+':'';
+    const tag=d.z>0.5?'<span class="tag tag-top">⭐ Partner</span>':d.z>-0.3?'<span class="tag tag-mid">Promising</span>':'<span class="tag tag-low">Monitor</span>';
+    const tier=d.tier===1?'<span class="tag tag-top">Tier 1</span>':d.tier===2?'<span class="tag tag-mid">Tier 2</span>':'<span class="tag tag-low">Unpartnered</span>';
+    return `<tr>
+      <td style="color:var(--muted);font-size:.72rem">${i+1}</td>
+      <td class="snc">${toTitle(d.school)}</td>
+      <td style="font-family:var(--mono)">${d.nurses}</td>
+      <td style="color:${d.retention>=.75?'#10b981':d.retention>=.65?'#f59e0b':'#ef4444'};font-family:var(--mono)">${pct(d.retention)}</td>
+      <td style="color:${d.passRate?d.passRate>=90?'#10b981':d.passRate>=80?'#f59e0b':'#ef4444':'#475569'};font-family:var(--mono)">${d.passRate?d.passRate.toFixed(1)+'%':'—'}</td>
+      <td style="font-family:var(--mono);color:var(--muted)">${d.tenure?d.tenure.toFixed(2)+'y':'—'}</td>
+      <td style="font-size:.72rem;color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.unit}</td>
+      <td>
+        <div class="sb-wrap">
+          <div class="sb-bg"><div class="sb-fill" style="width:${Math.max(4,bw)}%;background:${d.z>0?'#10b981':'#ef4444'}"></div></div>
+          <span style="font-family:var(--mono);font-size:.72rem;min-width:40px;color:${d.z>0?'#10b981':'#ef4444'}">${sign}${d.z.toFixed(2)}</span>
+        </div>
+      </td>
+      <td>${tag}</td>
+      <td>${tier}</td>
+    </tr>`;
+  }).join('');
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
